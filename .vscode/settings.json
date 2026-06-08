@@ -1,0 +1,7 @@
+{
+  // This is an XcodeGen project: there is no standalone .xcworkspace, only the
+  // one embedded in the generated .xcodeproj. SweetPad's auto-detection misses
+  // it and crashes with `path.join(undefined)`, so point it at the embedded
+  // workspace explicitly. (Path is stable across `xcodegen generate`.)
+  "sweetpad.build.xcodeWorkspacePath": "DamageTracker.xcodeproj/project.xcworkspace"
+}

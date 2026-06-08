@@ -25,3 +25,18 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tonyjones.DamageTracker
         CODE_SIGN_STYLE: Automatic
+schemes:
+  DamageTracker:
+    build:
+      targets:
+        DamageTracker: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
