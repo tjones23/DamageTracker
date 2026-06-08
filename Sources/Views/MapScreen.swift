@@ -4,11 +4,17 @@ import MapKit
 struct MapScreen: View {
     @EnvironmentObject var store: AppStore
     @EnvironmentObject var location: LocationManager
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var camera: MapCameraPosition = .region(Geo.usRegion)
     @State private var selectedAlert: StormAlert?
     @State private var selectedReport: StormReport?
     @State private var showingFilters = false
+    @State private var tappedOutlooks: [OutlookFeature] = []
+    @State private var showOutlookDialog = false
+    @State private var discussionURL: IdentifiableURL?
+
+    private var schemeKey: String { colorScheme == .dark ? "d" : "l" }
 
     var body: some View {
         NavigationStack {
@@ -37,47 +43,164 @@ struct MapScreen: View {
             .sheet(isPresented: $showingFilters) { FilterSettingsView() }
             .sheet(item: $selectedAlert) { AlertDetailView(alert: $0) }
             .sheet(item: $selectedReport) { ReportDetailView(report: $0) }
+            .sheet(item: $discussionURL) { SafariView(url: $0.url) }
+            .confirmationDialog(outlookDialogTitle, isPresented: $showOutlookDialog, titleVisibility: .visible) {
+                ForEach(tappedOutlooks) { feature in
+                    Button(feature.detail.isEmpty ? feature.label : feature.detail) { openDiscussion() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("View the SPC forecast discussion for the areas you tapped.")
+            }
         }
     }
 
     private var map: some View {
-        Map(position: $camera) {
-            UserAnnotation()
-
-            ForEach(store.filteredAlerts) { alert in
-                ForEach(Array(alert.polygons.enumerated()), id: \.offset) { _, ring in
-                    MapPolygon(coordinates: ring)
-                        .foregroundStyle(alert.color.opacity(0.22))
-                        .stroke(alert.color, lineWidth: 2)
+        MapReader { proxy in
+            Map(position: $camera) {
+                // SPC outlook areas. Item ids include the color scheme so the
+                // overlays are rebuilt (and recolored) when appearance changes.
+                ForEach(outlookAreaItems) { item in
+                    MapPolygon(coordinates: item.coordinates)
+                        .foregroundStyle(item.fill)
+                        .stroke(item.stroke, lineWidth: 1.5)
                 }
-                if let center = alert.centroid {
-                    Annotation(alert.event, coordinate: center) {
-                        Button { selectedAlert = alert } label: {
-                            Image(systemName: alert.isWarning ? "exclamationmark.triangle.fill" : "eye.fill")
-                                .font(.caption)
-                                .padding(5)
-                                .background(alert.color, in: Circle())
-                                .foregroundStyle(.white)
+                ForEach(outlookHatchItems) { item in
+                    MapPolyline(coordinates: item.coordinates)
+                        .stroke(item.color, lineWidth: 1.2)
+                }
+
+                UserAnnotation()
+
+                ForEach(store.filteredAlerts) { alert in
+                    ForEach(Array(alert.polygons.enumerated()), id: \.offset) { _, ring in
+                        MapPolygon(coordinates: ring)
+                            .foregroundStyle(alert.color.opacity(0.22))
+                            .stroke(alert.color, lineWidth: 2)
+                    }
+                    if let center = alert.centroid {
+                        Annotation(alert.event, coordinate: center) {
+                            Button { selectedAlert = alert } label: {
+                                Image(systemName: alert.isWarning ? "exclamationmark.triangle.fill" : "eye.fill")
+                                    .font(.caption)
+                                    .padding(5)
+                                    .background(alert.color, in: Circle())
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                    }
+                }
+
+                ForEach(store.filteredReports) { report in
+                    Annotation(report.title, coordinate: report.coordinate) {
+                        Button { selectedReport = report } label: {
+                            Image(systemName: report.category.systemImage)
+                                .font(.caption2)
+                                .padding(4)
+                                .background(.white, in: Circle())
+                                .overlay(Circle().stroke(report.category.color, lineWidth: 2))
+                                .foregroundStyle(report.category.color)
                         }
                     }
                 }
             }
-
-            ForEach(store.filteredReports) { report in
-                Annotation(report.title, coordinate: report.coordinate) {
-                    Button { selectedReport = report } label: {
-                        Image(systemName: report.category.systemImage)
-                            .font(.caption2)
-                            .padding(4)
-                            .background(.white, in: Circle())
-                            .overlay(Circle().stroke(report.category.color, lineWidth: 2))
-                            .foregroundStyle(report.category.color)
-                    }
+            .mapStyle(.standard(elevation: .flat))
+            .ignoresSafeArea(edges: .bottom)
+            .onTapGesture(coordinateSpace: .local) { point in
+                if let coordinate = proxy.convert(point, from: .local) {
+                    handleOutlookTap(coordinate)
                 }
             }
+            .overlay(alignment: .bottomLeading) {
+                OutlookLegend(features: store.visibleOutlookFeatures, hatchColor: hatchColor)
+                    .padding(.leading, 8)
+                    .padding(.bottom, 8)
+            }
         }
-        .mapStyle(.standard(elevation: .flat))
-        .ignoresSafeArea(edges: .bottom)
+    }
+
+    // MARK: - Outlook overlay items (scheme-keyed for live appearance updates)
+
+    private struct OutlookAreaItem: Identifiable {
+        let id: String
+        let coordinates: [CLLocationCoordinate2D]
+        let fill: Color
+        let stroke: Color
+    }
+
+    private struct OutlookHatchItem: Identifiable {
+        let id: String
+        let coordinates: [CLLocationCoordinate2D]
+        let color: Color
+    }
+
+    private var outlookAreaItems: [OutlookAreaItem] {
+        store.visibleOutlookFeatures.flatMap { feature in
+            feature.rings.enumerated().map { index, ring in
+                OutlookAreaItem(
+                    id: "\(feature.id)-\(index)-\(schemeKey)",
+                    coordinates: ring,
+                    fill: feature.isHatched ? .clear : outlookFill(feature),
+                    stroke: outlookStroke(feature)
+                )
+            }
+        }
+    }
+
+    private var outlookHatchItems: [OutlookHatchItem] {
+        let color = hatchColor
+        return store.visibleOutlookFeatures.filter(\.isHatched).flatMap { feature in
+            feature.hatchLines.enumerated().map { index, segment in
+                OutlookHatchItem(id: "\(feature.id)-h\(index)-\(schemeKey)", coordinates: segment, color: color)
+            }
+        }
+    }
+
+    // MARK: - Outlook styling (scheme-aware)
+
+    /// Fill is left as-is in light mode (which looks good) and made more
+    /// saturated / opaque in dark mode so it reads against the dark basemap.
+    private func outlookFill(_ feature: OutlookFeature) -> Color {
+        colorScheme == .dark
+            ? feature.fillColor.adjusted(saturationScale: 1.7, brightnessScale: 1.1).opacity(0.55)
+            : feature.fillColor.opacity(0.45)
+    }
+
+    private func outlookStroke(_ feature: OutlookFeature) -> Color {
+        colorScheme == .dark ? feature.strokeColor.adjusted(brightnessScale: 1.4) : feature.strokeColor
+    }
+
+    /// Hatch slashes: dark slate-blue on light maps, light blue on dark maps.
+    private var hatchColor: Color {
+        colorScheme == .dark
+            ? Color(red: 0.62, green: 0.80, blue: 1.0)
+            : Color(red: 0.16, green: 0.24, blue: 0.45)
+    }
+
+    // MARK: - Outlook tap → forecast discussion
+
+    private var outlookDialogTitle: String {
+        store.filters.selectedOutlook?.title ?? "SPC Outlook"
+    }
+
+    /// Collects the outlook areas under the tapped point (excluding
+    /// general-thunderstorm areas) and offers the forecast discussion.
+    private func handleOutlookTap(_ coordinate: CLLocationCoordinate2D) {
+        var seen = Set<String>()
+        let hits = store.visibleOutlookFeatures.filter { feature in
+            feature.contains(coordinate)
+                && !feature.isGeneralThunderstorm
+                && seen.insert(feature.label + feature.detail).inserted
+        }
+        guard !hits.isEmpty else { return }
+        tappedOutlooks = hits
+        showOutlookDialog = true
+    }
+
+    private func openDiscussion() {
+        if let url = store.filters.selectedOutlook?.discussionURL {
+            discussionURL = IdentifiableURL(url: url)
+        }
     }
 
     private func centerOnUser() {
@@ -89,5 +212,70 @@ struct MapScreen: View {
                 span: MKCoordinateSpan(latitudeDelta: 3, longitudeDelta: 3)
             ))
         }
+    }
+}
+
+/// A compact legend mapping the visible outlook risk levels to their colors.
+private struct OutlookLegend: View {
+    let features: [OutlookFeature]
+    let hatchColor: Color
+
+    /// Distinct (label, detail, color) entries, in render order.
+    private var items: [OutlookFeature] {
+        var seen = Set<String>()
+        var result: [OutlookFeature] = []
+        for feature in features where !feature.label.isEmpty {
+            if seen.insert(feature.label + feature.detail).inserted {
+                result.append(feature)
+            }
+        }
+        return result
+    }
+
+    var body: some View {
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("SPC Outlook").font(.caption2.weight(.semibold))
+                ForEach(items) { item in
+                    HStack(spacing: 6) {
+                        swatch(for: item)
+                            .overlay(RoundedRectangle(cornerRadius: 2).stroke(item.strokeColor, lineWidth: 1))
+                            .frame(width: 14, height: 14)
+                        Text(item.detail.isEmpty ? item.label : item.detail)
+                            .font(.caption2)
+                    }
+                }
+            }
+            .padding(8)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    @ViewBuilder private func swatch(for item: OutlookFeature) -> some View {
+        if item.isHatched {
+            HatchSwatch(color: hatchColor)
+        } else {
+            RoundedRectangle(cornerRadius: 2).fill(item.fillColor)
+        }
+    }
+}
+
+/// A tiny diagonal-hatch swatch drawn with Canvas (reliable, unlike ImagePaint).
+private struct HatchSwatch: View {
+    let color: Color
+
+    var body: some View {
+        Canvas { context, size in
+            var path = Path()
+            let step: CGFloat = 4
+            var x = -size.height
+            while x < size.width {
+                path.move(to: CGPoint(x: x, y: size.height))
+                path.addLine(to: CGPoint(x: x + size.height, y: 0))
+                x += step
+            }
+            context.stroke(path, with: .color(color), lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 2))
     }
 }

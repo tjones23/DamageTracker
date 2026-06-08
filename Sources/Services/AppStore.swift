@@ -8,6 +8,9 @@ final class AppStore: ObservableObject {
     @Published var reports: [StormReport] = []
     @Published var savedLocations: [SavedLocation] = []
 
+    /// Fetched outlook features, keyed by `OutlookProduct.id`.
+    @Published var outlooks: [String: [OutlookFeature]] = [:]
+
     @Published var isLoading = false
     @Published var lastUpdated: Date?
     @Published var errorMessage: String?
@@ -48,6 +51,33 @@ final class AppStore: ObservableObject {
             self.lastUpdated = Date()
         } catch {
             self.errorMessage = "Couldn't load storm data. Pull to retry.\n(\(error.localizedDescription))"
+        }
+
+        await loadSelectedOutlook(force: true)
+    }
+
+    // MARK: - SPC outlooks
+
+    /// Features for the currently selected outlook product (or empty if none).
+    var visibleOutlookFeatures: [OutlookFeature] {
+        guard let product = filters.selectedOutlook else { return [] }
+        return outlooks[product.id] ?? []
+    }
+
+    /// Fetch the selected product. `force` reloads even if already cached.
+    func loadSelectedOutlook(force: Bool = false) async {
+        guard let product = filters.selectedOutlook, force || outlooks[product.id] == nil else { return }
+        if let features = try? await SPCOutlookService.fetch(product) {
+            outlooks[product.id] = features
+        }
+    }
+
+    /// Update the single-outlook selection (kind + day) and fetch it on demand.
+    func selectOutlook(kind: OutlookKind?, day: Int) {
+        filters.outlookKind = kind
+        if let kind {
+            filters.outlookDay = kind.availableDays.contains(day) ? day : (kind.availableDays.first ?? 1)
+            Task { await loadSelectedOutlook() }
         }
     }
 
