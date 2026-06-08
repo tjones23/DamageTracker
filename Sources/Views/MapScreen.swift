@@ -63,11 +63,11 @@ struct MapScreen: View {
                 ForEach(outlookAreaItems) { item in
                     MapPolygon(coordinates: item.coordinates)
                         .foregroundStyle(item.fill)
-                        .stroke(item.stroke, lineWidth: 1.5)
+                        .stroke(item.stroke, lineWidth: 2.5)
                 }
                 ForEach(outlookHatchItems) { item in
                     MapPolyline(coordinates: item.coordinates)
-                        .stroke(item.color, lineWidth: 1.2)
+                        .stroke(.black, lineWidth: item.bold ? 4.5 : 1.3)
                 }
 
                 UserAnnotation()
@@ -131,7 +131,7 @@ struct MapScreen: View {
     private struct OutlookHatchItem: Identifiable {
         let id: String
         let coordinates: [CLLocationCoordinate2D]
-        let color: Color
+        let bold: Bool
     }
 
     private var outlookAreaItems: [OutlookAreaItem] {
@@ -148,34 +148,33 @@ struct MapScreen: View {
     }
 
     private var outlookHatchItems: [OutlookHatchItem] {
-        let color = hatchColor
-        return store.visibleOutlookFeatures.filter(\.isHatched).flatMap { feature in
-            feature.hatchLines.enumerated().map { index, segment in
-                OutlookHatchItem(id: "\(feature.id)-h\(index)-\(schemeKey)", coordinates: segment, color: color)
+        store.visibleOutlookFeatures.filter(\.isHatched).flatMap { feature in
+            let bold = (feature.cigLevel ?? 1) >= 2
+            return feature.hatchLines.enumerated().map { index, segment in
+                OutlookHatchItem(id: "\(feature.id)-h\(index)", coordinates: segment, bold: bold)
             }
         }
     }
 
     // MARK: - Outlook styling (scheme-aware)
 
-    /// Fill is left as-is in light mode (which looks good) and made more
-    /// saturated / opaque in dark mode so it reads against the dark basemap.
+    /// Saturated, fairly opaque fills so the risk areas pop off the basemap,
+    /// pushed further in dark mode where the map is darker.
     private func outlookFill(_ feature: OutlookFeature) -> Color {
         colorScheme == .dark
-            ? feature.fillColor.adjusted(saturationScale: 1.7, brightnessScale: 1.1).opacity(0.55)
-            : feature.fillColor.opacity(0.45)
+            ? feature.fillColor.adjusted(saturationScale: 2.1, brightnessScale: 1.15).opacity(0.62)
+            : feature.fillColor.adjusted(saturationScale: 1.55, brightnessScale: 1.02).opacity(0.6)
     }
 
     private func outlookStroke(_ feature: OutlookFeature) -> Color {
-        colorScheme == .dark ? feature.strokeColor.adjusted(brightnessScale: 1.4) : feature.strokeColor
+        colorScheme == .dark
+            ? feature.strokeColor.adjusted(saturationScale: 1.5, brightnessScale: 1.45)
+            : feature.strokeColor.adjusted(saturationScale: 1.4)
     }
 
-    /// Hatch slashes: dark slate-blue on light maps, light blue on dark maps.
-    private var hatchColor: Color {
-        colorScheme == .dark
-            ? Color(red: 0.62, green: 0.80, blue: 1.0)
-            : Color(red: 0.16, green: 0.24, blue: 0.45)
-    }
+    /// Hatch slashes are always black — they always sit on top of a colored
+    /// risk-area fill, so black reads well in both light and dark mode.
+    private let hatchColor: Color = .black
 
     // MARK: - Outlook tap → forecast discussion
 
@@ -253,7 +252,7 @@ private struct OutlookLegend: View {
 
     @ViewBuilder private func swatch(for item: OutlookFeature) -> some View {
         if item.isHatched {
-            HatchSwatch(color: hatchColor)
+            HatchSwatch(color: hatchColor, bold: (item.cigLevel ?? 1) >= 2)
         } else {
             RoundedRectangle(cornerRadius: 2).fill(item.fillColor)
         }
@@ -263,18 +262,21 @@ private struct OutlookLegend: View {
 /// A tiny diagonal-hatch swatch drawn with Canvas (reliable, unlike ImagePaint).
 private struct HatchSwatch: View {
     let color: Color
+    var bold: Bool = false
 
     var body: some View {
         Canvas { context, size in
             var path = Path()
-            let step: CGFloat = 4
+            // Keep the line width well under the step so bold slashes stay
+            // distinct lines (not a merged solid block).
+            let step: CGFloat = bold ? 5 : 4
             var x = -size.height
             while x < size.width {
                 path.move(to: CGPoint(x: x, y: size.height))
                 path.addLine(to: CGPoint(x: x + size.height, y: 0))
                 x += step
             }
-            context.stroke(path, with: .color(color), lineWidth: 1)
+            context.stroke(path, with: .color(color), lineWidth: bold ? 2.2 : 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: 2))
     }

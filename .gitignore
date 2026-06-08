@@ -7,3 +7,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .DS_Store
+
+# SweetPad / SourceKit-LSP (machine-specific; regenerate locally)
+buildServer.json
+.sweetpad/
