@@ -63,11 +63,11 @@ struct MapScreen: View {
                 ForEach(outlookAreaItems) { item in
                     MapPolygon(coordinates: item.coordinates)
                         .foregroundStyle(item.fill)
-                        .stroke(item.stroke, lineWidth: 1.5)
+                        .stroke(item.stroke, lineWidth: 2.5)
                 }
                 ForEach(outlookHatchItems) { item in
                     MapPolyline(coordinates: item.coordinates)
-                        .stroke(item.color, lineWidth: 1.2)
+                        .stroke(item.color, lineWidth: 2)
                 }
 
                 UserAnnotation()
@@ -158,23 +158,26 @@ struct MapScreen: View {
 
     // MARK: - Outlook styling (scheme-aware)
 
-    /// Fill is left as-is in light mode (which looks good) and made more
-    /// saturated / opaque in dark mode so it reads against the dark basemap.
+    /// Saturated, fairly opaque fills so the risk areas pop off the basemap,
+    /// pushed further in dark mode where the map is darker.
     private func outlookFill(_ feature: OutlookFeature) -> Color {
         colorScheme == .dark
-            ? feature.fillColor.adjusted(saturationScale: 1.7, brightnessScale: 1.1).opacity(0.55)
-            : feature.fillColor.opacity(0.45)
+            ? feature.fillColor.adjusted(saturationScale: 2.1, brightnessScale: 1.15).opacity(0.62)
+            : feature.fillColor.adjusted(saturationScale: 1.55, brightnessScale: 1.02).opacity(0.6)
     }
 
     private func outlookStroke(_ feature: OutlookFeature) -> Color {
-        colorScheme == .dark ? feature.strokeColor.adjusted(brightnessScale: 1.4) : feature.strokeColor
+        colorScheme == .dark
+            ? feature.strokeColor.adjusted(saturationScale: 1.5, brightnessScale: 1.45)
+            : feature.strokeColor.adjusted(saturationScale: 1.4)
     }
 
-    /// Hatch slashes: dark slate-blue on light maps, light blue on dark maps.
+    /// Hatch slashes: deep navy on light maps, bright near-white on dark maps,
+    /// for strong contrast against the (now more saturated) area fills.
     private var hatchColor: Color {
         colorScheme == .dark
-            ? Color(red: 0.62, green: 0.80, blue: 1.0)
-            : Color(red: 0.16, green: 0.24, blue: 0.45)
+            ? Color(red: 0.90, green: 0.95, blue: 1.0)
+            : Color(red: 0.08, green: 0.13, blue: 0.36)
     }
 
     // MARK: - Outlook tap → forecast discussion

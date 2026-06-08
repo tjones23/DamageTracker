@@ -14,7 +14,29 @@ enum SPCOutlookService {
             throw URLError(.badServerResponse)
         }
         let collection = try JSONDecoder().decode(OutlookCollection.self, from: data)
-        return collection.features.compactMap { $0.asFeature }
+        let raws = collection.features.filter { !($0.geometry?.outerRings.isEmpty ?? true) }
+
+        // A single reference latitude (centroid of the hatched areas) keeps all
+        // hatch lines on one aligned grid, so nested CIG areas read cleanly.
+        let hatchedCoords = raws.filter(\.isHatched).flatMap { $0.geometry!.outerRings.flatMap { $0 } }
+        let refLat = hatchedCoords.isEmpty
+            ? 39.5
+            : hatchedCoords.map(\.latitude).reduce(0, +) / Double(hatchedCoords.count)
+
+        return raws.map { raw in
+            let geometry = raw.geometry!
+            return OutlookFeature(
+                rings: geometry.outerRings,
+                label: raw.label,
+                detail: raw.detail,
+                fillColor: Color(outlookHex: raw.properties.fill),
+                strokeColor: Color(outlookHex: raw.properties.stroke),
+                isHatched: raw.isHatched,
+                hatchLines: raw.isHatched
+                    ? Hatch.segments(forPolygons: geometry.polygons, referenceLatitude: refLat)
+                    : []
+            )
+        }
     }
 }
 
@@ -28,21 +50,9 @@ private struct RawFeature: Decodable {
     let properties: Props
     let geometry: RawGeometry?
 
-    var asFeature: OutlookFeature? {
-        guard let geometry, !geometry.rings.isEmpty else { return nil }
-        let label = properties.LABEL ?? ""
-        let detail = properties.LABEL2 ?? ""
-        let hatched = OutlookFeature.detectHatched(label: label, detail: detail)
-        return OutlookFeature(
-            rings: geometry.rings,
-            label: label,
-            detail: detail,
-            fillColor: Color(outlookHex: properties.fill),
-            strokeColor: Color(outlookHex: properties.stroke),
-            isHatched: hatched,
-            hatchLines: hatched ? Hatch.segments(for: geometry.rings) : []
-        )
-    }
+    var label: String { properties.LABEL ?? "" }
+    var detail: String { properties.LABEL2 ?? "" }
+    var isHatched: Bool { OutlookFeature.detectHatched(label: label, detail: detail) }
 
     struct Props: Decodable {
         let LABEL: String?
@@ -52,9 +62,13 @@ private struct RawFeature: Decodable {
     }
 }
 
-/// Outer rings of each polygon, handling Polygon and MultiPolygon geometries.
+/// Decodes Polygon / MultiPolygon geometry, keeping each polygon's full ring
+/// list (outer + holes) plus a convenience list of just the outer rings.
 private struct RawGeometry: Decodable {
-    let rings: [[CLLocationCoordinate2D]]
+    /// Each element is one polygon: `[outerRing, hole1, hole2, …]`.
+    let polygons: [[[CLLocationCoordinate2D]]]
+    /// Just the outer ring of each polygon (used for fills and hit-testing).
+    var outerRings: [[CLLocationCoordinate2D]] { polygons.compactMap(\.first) }
 
     enum CodingKeys: String, CodingKey { case type, coordinates }
 
@@ -62,21 +76,19 @@ private struct RawGeometry: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
 
-        func toCoords(_ ring: [[Double]]) -> [CLLocationCoordinate2D] {
-            ring.compactMap { pair in
-                pair.count >= 2 ? CLLocationCoordinate2D(latitude: pair[1], longitude: pair[0]) : nil
-            }
+        func ring(_ coords: [[Double]]) -> [CLLocationCoordinate2D] {
+            coords.compactMap { $0.count >= 2 ? CLLocationCoordinate2D(latitude: $0[1], longitude: $0[0]) : nil }
         }
 
         switch type {
         case "Polygon":
             let raw = try container.decode([[[Double]]].self, forKey: .coordinates)
-            rings = raw.first.map { [toCoords($0)] } ?? []
+            polygons = [raw.map(ring)]
         case "MultiPolygon":
             let raw = try container.decode([[[[Double]]]].self, forKey: .coordinates)
-            rings = raw.compactMap { $0.first.map(toCoords) }
+            polygons = raw.map { $0.map(ring) }
         default:
-            rings = []
+            polygons = []
         }
     }
 }
