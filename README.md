@@ -1,75 +1,66 @@
 # DamageTracker
 
-A native iOS app (SwiftUI + MapKit + CoreLocation) that tracks storm damage from
-**tornadoes, wind, and hail** using free, no-API-key US government data.
+A cross-platform (.NET MAUI, **.NET 10**) app for **iOS and Android** that tracks
+US storm damage from **tornadoes, wind, and hail** using free, no-API-key
+government data. Migrated from the original native iOS SwiftUI app.
 
 ## Data sources (all free, no key)
 
 | Feature | Source |
 |---|---|
 | Live tornado / severe-thunderstorm **warnings & watches** (map polygons) | [NWS API](https://www.weather.gov/documentation/services-web-api) — `api.weather.gov/alerts/active` |
-| Confirmed **tornado / hail / wind reports** (last 1–5 days) | [NOAA SPC reports](https://www.spc.noaa.gov/climo/reports/) — `today.csv` + dated `YYMMDD_rpts.csv` |
-| Address / city search for saved locations | Apple MapKit `MKLocalSearch` (on-device, free) |
+| Confirmed **tornado / hail / wind reports** | [NOAA SPC](https://www.spc.noaa.gov/climo/reports/) — `today.csv` + dated `YYMMDD_rpts.csv` |
+| **SPC convective outlooks** (categorical days 1–3; tornado/wind/hail days 1–2) | `spc.noaa.gov/products/outlook/day{N}otlk_{kind}.nolyr.geojson` |
+| Address search for saved locations | MAUI `Geocoding` (platform geocoder, no key) |
 
 > Coverage is **United States only** — these government feeds don't cover other countries.
 
 ## Features
 
-- **Map** — live warning polygons (tornado = red, severe t-storm = orange) plus
-  pins for confirmed hail/wind/tornado reports. Tap any pin for details.
-- **Reports** — scrollable list of confirmed reports with a per-type count summary;
-  choose a 1–5 day window. Pull to refresh.
-- **Warnings** — list of every active warning/watch; tab badge shows the warning count.
-- **Saved** — save home/work/family addresses (or your current location) and see, for
-  each, whether it's inside an active warning and how many reports are nearby (within 50 mi).
-- **Location banner** — if your phone is inside an active warning polygon, the map shows
-  a banner; otherwise it surfaces the closest nearby report.
+- **Map** (Mapsui / OpenStreetMap) — live warning polygons, confirmed-report markers,
+  a single selectable SPC outlook with CIG **hatching**, a legend, and tap-to-open
+  forecast discussion. Overlay colors are theme-aware (light/dark).
+- **Reports / Warnings** — filterable lists with pull-to-refresh; Warnings tab badge.
+- **Saved** — save home/work via current location or address search; see warnings
+  and nearby reports (within 50 mi) for each.
+- **Filters** (persisted) — show/hide each storm type; min wind mph / hail inches /
+  tornado EF rating; report day range; outlook selection.
+- **Location banner** when you're inside a warning or near recent reports.
 
-Category filter chips (Tornado / Wind / Hail) apply across the map, reports, and warnings.
-
-## Project layout
+## Architecture
 
 ```
-Sources/
-  App/        DamageTrackerApp.swift        – app entry, wires up stores
-  Models/     Models.swift                  – StormAlert, StormReport, SavedLocation, StormCategory
-  Services/   NWSService.swift              – fetch + GeoJSON decode of active alerts
-              SPCService.swift              – fetch + CSV parse of storm reports
-              LocationManager.swift         – CoreLocation wrapper
-              AppStore.swift                – app state, filtering, nearby-threat queries
-              Geo.swift                     – point-in-polygon, distance, default region
-  Views/      RootView, MapScreen, ReportsScreen, AlertsScreen,
-              SavedLocationsScreen, NearbyBanner, Components
-project.yml                                 – XcodeGen project definition
+Models/        domain types (StormAlert, StormReport, OutlookFeature, FilterSettings, …)
+Services/      Geo, Hatch, ColorUtil, NwsService, SpcReportService, SpcOutlookService,
+               LocationService, AppState (DI singleton store), PreferencesStore
+ViewModels/    one per screen (CommunityToolkit.Mvvm)
+Views/         XAML pages + code-only detail pages
+Controls/      CategoryFilterBar, NearbyBanner
+Maps/          MapsuiHelpers + the map page's layer building
+AppShell.xaml  TabBar with Map / Reports / Warnings / Saved
 ```
+
+`AppState` is the single source of truth (replaces the iOS `AppStore`); ViewModels and
+the map observe its `DataChanged` / `FiltersChanged` events. Pure logic
+(point-in-polygon, distance, CSV/GeoJSON parsing, the hatch grid-stamp, color math)
+was ported directly from the Swift app.
 
 ## Build & run
 
-The `.xcodeproj` is generated from `project.yml` by [XcodeGen](https://github.com/yonaskolb/XcodeGen):
+Prerequisites: **.NET 10 SDK** + the MAUI workload, Xcode (iOS), Android SDK + JDK.
 
 ```bash
-brew install xcodegen      # once
-xcodegen generate          # regenerate the .xcodeproj after editing project.yml/sources
-open DamageTracker.xcodeproj
+dotnet workload install maui
+
+# iOS simulator
+dotnet build -t:Run -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64 \
+  -p:_DeviceName=:v2:udid=<SIMULATOR_UDID>
+
+# Android emulator (with one running)
+dotnet build -t:Run -f net10.0-android
 ```
 
-Then pick a simulator or your device in Xcode and press **⌘R**. Minimum target: **iOS 17**.
+Packages: `Mapsui.Maui`, `Mapsui.Tiling` (OSM tiles), `CommunityToolkit.Mvvm`.
 
-### Type-check from the command line (no simulator needed)
-
-```bash
-SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-xcrun --sdk iphoneos swiftc -typecheck -parse-as-library \
-  -target arm64-apple-ios17.0 -sdk "$SDK" $(find Sources -name '*.swift')
-```
-
-> Note: on this machine `xcodebuild` currently fails to launch because Xcode's
-> `IDESimulatorFoundation` plugin can't load (a system-framework mismatch, unrelated
-> to this code). If you hit that, run `sudo xcodebuild -runFirstLaunch` once, or open
-> Xcode.app so it installs its components — then building/running works normally.
-
-## Ideas for next iterations
-
-- Background refresh + push notifications when a saved location enters a warning.
-- Persisted history so you can see damage trends over weeks.
-- Filter reports by magnitude (e.g. hail ≥ 1", wind ≥ 60 mph).
+> Note: the OSM tile layer is fine for development; for production, configure a
+> tile provider and a descriptive HTTP User-Agent per OSM's usage policy.
