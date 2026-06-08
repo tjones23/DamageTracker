@@ -12,16 +12,22 @@ final class AppStore: ObservableObject {
     @Published var lastUpdated: Date?
     @Published var errorMessage: String?
 
-    /// Map/report filters keyed by category.
-    @Published var enabledCategories: Set<StormCategory> = Set(StormCategory.allCases)
-    @Published var reportDays = 3
+    /// Persisted filter configuration (category toggles + magnitude thresholds).
+    @Published var filters = FilterSettings() {
+        didSet { saveFilters() }
+    }
 
     /// Reports are considered "nearby" within this radius (miles).
     let nearbyRadiusMiles = 50.0
 
     private let savedKey = "saved_locations"
+    private let filtersKey = "filter_settings"
 
     init() {
+        if let data = UserDefaults.standard.data(forKey: filtersKey),
+           let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
+            filters = decoded   // setting in init does not trigger didSet
+        }
         loadSavedLocations()
     }
 
@@ -33,7 +39,7 @@ final class AppStore: ObservableObject {
         defer { isLoading = false }
 
         async let alertsResult = NWSService.fetchActiveAlerts()
-        async let reportsResult = SPCService.fetchRecentReports(days: reportDays)
+        async let reportsResult = SPCService.fetchRecentReports(days: filters.reportDays)
 
         do {
             let (a, r) = try await (alertsResult, reportsResult)
@@ -47,20 +53,28 @@ final class AppStore: ObservableObject {
 
     // MARK: - Filtering
 
+    /// Warnings are filtered by storm type only (they carry no point magnitude).
     var filteredAlerts: [StormAlert] {
-        alerts.filter { enabledCategories.contains($0.category) }
+        alerts.filter { filters.isEnabled($0.category) }
     }
 
+    /// Reports are filtered by storm type and magnitude thresholds.
     var filteredReports: [StormReport] {
-        reports.filter { enabledCategories.contains($0.category) }
+        reports.filter { filters.passes($0) }
     }
+
+    func isEnabled(_ category: StormCategory) -> Bool { filters.isEnabled(category) }
 
     func toggle(_ category: StormCategory) {
-        if enabledCategories.contains(category) {
-            enabledCategories.remove(category)
-        } else {
-            enabledCategories.insert(category)
+        switch category {
+        case .tornado: filters.showTornado.toggle()
+        case .wind: filters.showWind.toggle()
+        case .hail: filters.showHail.toggle()
         }
+    }
+
+    func resetFilters() {
+        filters = FilterSettings()
     }
 
     // MARK: - Nearby threats
@@ -71,8 +85,9 @@ final class AppStore: ObservableObject {
     }
 
     /// Reports within `nearbyRadiusMiles` of the point, nearest first.
+    /// Respects the active filters so nearby counts match what's shown elsewhere.
     func reports(near point: CLLocationCoordinate2D) -> [(report: StormReport, miles: Double)] {
-        reports
+        filteredReports
             .map { ($0, Geo.miles(Geo.distanceMeters(point, $0.coordinate))) }
             .filter { $0.1 <= nearbyRadiusMiles }
             .sorted { $0.1 < $1.1 }
@@ -100,6 +115,14 @@ final class AppStore: ObservableObject {
     private func persistSavedLocations() {
         if let data = try? JSONEncoder().encode(savedLocations) {
             UserDefaults.standard.set(data, forKey: savedKey)
+        }
+    }
+
+    // MARK: - Filter persistence
+
+    private func saveFilters() {
+        if let data = try? JSONEncoder().encode(filters) {
+            UserDefaults.standard.set(data, forKey: filtersKey)
         }
     }
 }

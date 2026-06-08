@@ -3,6 +3,7 @@ import SwiftUI
 struct ReportsScreen: View {
     @EnvironmentObject var store: AppStore
     @State private var selectedReport: StormReport?
+    @State private var showingFilters = false
 
     var body: some View {
         NavigationStack {
@@ -14,20 +15,14 @@ struct ReportsScreen: View {
             .navigationTitle("Storm Reports")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("Days", selection: $store.reportDays) {
-                            Text("Today").tag(1)
-                            Text("Last 2 days").tag(2)
-                            Text("Last 3 days").tag(3)
-                            Text("Last 5 days").tag(5)
-                        }
-                    } label: {
-                        Image(systemName: "calendar")
+                    Button { showingFilters = true } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
                     }
                 }
             }
-            .onChange(of: store.reportDays) { Task { await store.refresh() } }
+            .onChange(of: store.filters.reportDays) { Task { await store.refresh() } }
             .refreshable { await store.refresh() }
+            .sheet(isPresented: $showingFilters) { FilterSettingsView() }
             .sheet(item: $selectedReport) { ReportDetailView(report: $0) }
             .overlay { if store.isLoading && store.reports.isEmpty { ProgressView() } }
         }
