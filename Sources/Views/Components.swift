@@ -9,7 +9,7 @@ struct CategoryFilterBar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(StormCategory.allCases) { category in
-                    let on = store.enabledCategories.contains(category)
+                    let on = store.isEnabled(category)
                     Button {
                         store.toggle(category)
                     } label: {

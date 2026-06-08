@@ -111,3 +111,73 @@ struct SavedLocation: Identifiable, Codable, Equatable {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 }
+
+// MARK: - Parsed magnitudes for threshold filtering
+
+extension StormReport {
+    /// Measured wind speed in mph, or nil if the report is "UNK"/unrated.
+    var windMph: Int? {
+        guard category == .wind else { return nil }
+        let digits = magnitude.filter(\.isNumber)
+        return digits.isEmpty ? nil : Int(digits)
+    }
+
+    /// Hail diameter in inches, or nil if unparseable.
+    var hailInches: Double? {
+        guard category == .hail else { return nil }
+        return Double(magnitude)
+    }
+
+    /// EF/F rating number (0–5), or nil if the tornado is "UNK"/unrated.
+    var efRating: Int? {
+        guard category == .tornado else { return nil }
+        let digits = magnitude.filter(\.isNumber)
+        return digits.isEmpty ? nil : Int(digits)
+    }
+}
+
+// MARK: - Persisted filter configuration
+
+struct FilterSettings: Codable, Equatable {
+    /// Which storm types to show (applies to the map, reports, and warnings).
+    var showTornado = true
+    var showWind = true
+    var showHail = true
+
+    /// Minimum measured wind speed in mph. 0 = no minimum (includes unrated).
+    var minWindMph = 0
+    /// Minimum hail diameter in inches. 0 = no minimum (includes unrated).
+    var minHailInches = 0.0
+    /// Minimum tornado rating (EF number 0–5). nil = any, including unrated.
+    var minTornadoRating: Int? = nil
+
+    /// How many days of reports to fetch (1–5).
+    var reportDays = 3
+
+    func isEnabled(_ category: StormCategory) -> Bool {
+        switch category {
+        case .tornado: return showTornado
+        case .wind: return showWind
+        case .hail: return showHail
+        }
+    }
+
+    /// Whether a single report passes the active category + magnitude filters.
+    func passes(_ report: StormReport) -> Bool {
+        guard isEnabled(report.category) else { return false }
+        switch report.category {
+        case .wind:
+            guard minWindMph > 0 else { return true }
+            guard let mph = report.windMph else { return false }
+            return mph >= minWindMph
+        case .hail:
+            guard minHailInches > 0 else { return true }
+            guard let inches = report.hailInches else { return false }
+            return inches >= minHailInches
+        case .tornado:
+            guard let minRating = minTornadoRating else { return true }
+            guard let rating = report.efRating else { return false }
+            return rating >= minRating
+        }
+    }
+}

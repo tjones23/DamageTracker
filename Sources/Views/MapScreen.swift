@@ -8,26 +8,33 @@ struct MapScreen: View {
     @State private var camera: MapCameraPosition = .region(Geo.usRegion)
     @State private var selectedAlert: StormAlert?
     @State private var selectedReport: StormReport?
+    @State private var showingFilters = false
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .top) {
-                map
+            map
+            .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     CategoryFilterBar()
                         .background(.ultraThinMaterial)
                     NearbyBanner()
-                    Spacer()
                 }
             }
             .navigationTitle("Storm Map")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    Button { showingFilters = true } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { centerOnUser() } label: { Image(systemName: "location") }
                         .disabled(location.coordinate == nil)
                 }
             }
+            .onChange(of: store.filters.reportDays) { Task { await store.refresh() } }
+            .sheet(isPresented: $showingFilters) { FilterSettingsView() }
             .sheet(item: $selectedAlert) { AlertDetailView(alert: $0) }
             .sheet(item: $selectedReport) { ReportDetailView(report: $0) }
         }
