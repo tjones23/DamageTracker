@@ -76,6 +76,14 @@ struct OutlookFeature: Identifiable {
             || detail.range(of: "Conditional Intensity", options: .caseInsensitive) != nil
     }
 
+    /// Conditional Intensity Group level (1, 2, …) parsed from "CIGx", or nil.
+    /// Higher levels are drawn with bolder hatching to stand out.
+    var cigLevel: Int? {
+        guard isHatched else { return nil }
+        let digits = label.filter(\.isNumber)
+        return digits.isEmpty ? nil : Int(digits)
+    }
+
     /// General-thunderstorms areas aren't a severe risk, so a tap on one alone
     /// offers no forecast discussion.
     var isGeneralThunderstorm: Bool {

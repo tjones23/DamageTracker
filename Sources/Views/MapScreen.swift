@@ -67,7 +67,7 @@ struct MapScreen: View {
                 }
                 ForEach(outlookHatchItems) { item in
                     MapPolyline(coordinates: item.coordinates)
-                        .stroke(item.color, lineWidth: 2)
+                        .stroke(.black, lineWidth: item.bold ? 4.5 : 1.3)
                 }
 
                 UserAnnotation()
@@ -131,7 +131,7 @@ struct MapScreen: View {
     private struct OutlookHatchItem: Identifiable {
         let id: String
         let coordinates: [CLLocationCoordinate2D]
-        let color: Color
+        let bold: Bool
     }
 
     private var outlookAreaItems: [OutlookAreaItem] {
@@ -148,10 +148,10 @@ struct MapScreen: View {
     }
 
     private var outlookHatchItems: [OutlookHatchItem] {
-        let color = hatchColor
-        return store.visibleOutlookFeatures.filter(\.isHatched).flatMap { feature in
-            feature.hatchLines.enumerated().map { index, segment in
-                OutlookHatchItem(id: "\(feature.id)-h\(index)-\(schemeKey)", coordinates: segment, color: color)
+        store.visibleOutlookFeatures.filter(\.isHatched).flatMap { feature in
+            let bold = (feature.cigLevel ?? 1) >= 2
+            return feature.hatchLines.enumerated().map { index, segment in
+                OutlookHatchItem(id: "\(feature.id)-h\(index)", coordinates: segment, bold: bold)
             }
         }
     }
@@ -172,13 +172,9 @@ struct MapScreen: View {
             : feature.strokeColor.adjusted(saturationScale: 1.4)
     }
 
-    /// Hatch slashes: deep navy on light maps, bright near-white on dark maps,
-    /// for strong contrast against the (now more saturated) area fills.
-    private var hatchColor: Color {
-        colorScheme == .dark
-            ? Color(red: 0.90, green: 0.95, blue: 1.0)
-            : Color(red: 0.08, green: 0.13, blue: 0.36)
-    }
+    /// Hatch slashes are always black — they always sit on top of a colored
+    /// risk-area fill, so black reads well in both light and dark mode.
+    private let hatchColor: Color = .black
 
     // MARK: - Outlook tap → forecast discussion
 
@@ -256,7 +252,7 @@ private struct OutlookLegend: View {
 
     @ViewBuilder private func swatch(for item: OutlookFeature) -> some View {
         if item.isHatched {
-            HatchSwatch(color: hatchColor)
+            HatchSwatch(color: hatchColor, bold: (item.cigLevel ?? 1) >= 2)
         } else {
             RoundedRectangle(cornerRadius: 2).fill(item.fillColor)
         }
@@ -266,18 +262,21 @@ private struct OutlookLegend: View {
 /// A tiny diagonal-hatch swatch drawn with Canvas (reliable, unlike ImagePaint).
 private struct HatchSwatch: View {
     let color: Color
+    var bold: Bool = false
 
     var body: some View {
         Canvas { context, size in
             var path = Path()
-            let step: CGFloat = 4
+            // Keep the line width well under the step so bold slashes stay
+            // distinct lines (not a merged solid block).
+            let step: CGFloat = bold ? 5 : 4
             var x = -size.height
             while x < size.width {
                 path.move(to: CGPoint(x: x, y: size.height))
                 path.addLine(to: CGPoint(x: x + size.height, y: 0))
                 x += step
             }
-            context.stroke(path, with: .color(color), lineWidth: 1)
+            context.stroke(path, with: .color(color), lineWidth: bold ? 2.2 : 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: 2))
     }
