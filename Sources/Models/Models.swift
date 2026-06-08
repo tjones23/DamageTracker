@@ -154,12 +154,42 @@ struct FilterSettings: Codable, Equatable {
     /// How many days of reports to fetch (1–5).
     var reportDays = 3
 
+    /// The single SPC outlook shown on the map. nil = none shown.
+    var outlookKind: OutlookKind? = nil
+    /// The day for the selected outlook (clamped to the kind's available days).
+    var outlookDay = 1
+
+    init() {}
+
+    /// Tolerant decoder: missing keys fall back to defaults so adding new
+    /// settings never invalidates a user's previously saved configuration.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        showTornado = try c.decodeIfPresent(Bool.self, forKey: .showTornado) ?? true
+        showWind = try c.decodeIfPresent(Bool.self, forKey: .showWind) ?? true
+        showHail = try c.decodeIfPresent(Bool.self, forKey: .showHail) ?? true
+        minWindMph = try c.decodeIfPresent(Int.self, forKey: .minWindMph) ?? 0
+        minHailInches = try c.decodeIfPresent(Double.self, forKey: .minHailInches) ?? 0
+        minTornadoRating = try c.decodeIfPresent(Int.self, forKey: .minTornadoRating) ?? nil
+        reportDays = try c.decodeIfPresent(Int.self, forKey: .reportDays) ?? 3
+        outlookKind = try c.decodeIfPresent(OutlookKind.self, forKey: .outlookKind) ?? nil
+        outlookDay = try c.decodeIfPresent(Int.self, forKey: .outlookDay) ?? 1
+    }
+
     func isEnabled(_ category: StormCategory) -> Bool {
         switch category {
         case .tornado: return showTornado
         case .wind: return showWind
         case .hail: return showHail
         }
+    }
+
+    /// The currently selected outlook product, with the day clamped to a value
+    /// the chosen kind actually publishes. nil when no outlook is selected.
+    var selectedOutlook: OutlookProduct? {
+        guard let kind = outlookKind else { return nil }
+        let day = kind.availableDays.contains(outlookDay) ? outlookDay : (kind.availableDays.first ?? 1)
+        return OutlookProduct(day: day, kind: kind)
     }
 
     /// Whether a single report passes the active category + magnitude filters.

@@ -88,6 +88,27 @@ struct FilterSettingsView: View {
                 }
 
                 Section {
+                    Picker("Outlook", selection: outlookKindBinding) {
+                        Text("Off").tag(OutlookKind?.none)
+                        ForEach(OutlookKind.allCases) { kind in
+                            Text(kind.title).tag(OutlookKind?.some(kind))
+                        }
+                    }
+                    if let kind = store.filters.outlookKind {
+                        Picker("Day", selection: outlookDayBinding) {
+                            ForEach(kind.availableDays, id: \.self) { day in
+                                Text("Day \(day)").tag(day)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                } header: {
+                    Text("SPC Outlook")
+                } footer: {
+                    Text("Show one SPC convective outlook as a map overlay. Categorical covers days 1–3; tornado, wind, and hail probabilities cover days 1–2.")
+                }
+
+                Section {
                     Button("Reset to defaults", role: .destructive) {
                         store.resetFilters()
                     }
@@ -101,5 +122,21 @@ struct FilterSettingsView: View {
                 }
             }
         }
+    }
+
+    /// Selecting a kind (or "Off") routes through the store so the layer is
+    /// persisted and fetched on demand.
+    private var outlookKindBinding: Binding<OutlookKind?> {
+        Binding(
+            get: { store.filters.outlookKind },
+            set: { store.selectOutlook(kind: $0, day: store.filters.outlookDay) }
+        )
+    }
+
+    private var outlookDayBinding: Binding<Int> {
+        Binding(
+            get: { store.filters.outlookDay },
+            set: { store.selectOutlook(kind: store.filters.outlookKind, day: $0) }
+        )
     }
 }
