@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="DamageTracker.Views.SavedLocationsPage"
+    x:Name="Page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:DamageTracker.ViewModels"
+    Title="Saved">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add" Command="{Binding AddCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+        <VerticalStackLayout IsVisible="{Binding IsEmpty}" Padding="28" Spacing="12" VerticalOptions="Center">
+            <Label Text="No saved locations" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="Save your home, work, or family addresses to keep an eye on storm damage there."
+                   FontSize="14" TextColor="Gray" HorizontalTextAlignment="Center" />
+            <Button Text="Add a location" Command="{Binding AddCommand}" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <CollectionView ItemsSource="{Binding Items}" SelectionMode="None" IsVisible="{Binding IsEmpty, Converter={x:Static vm:Not.Instance}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:SavedLocationItem">
+                    <Grid Padding="16,12" RowDefinitions="Auto,Auto" RowSpacing="4">
+                        <Label Grid.Row="0" Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
+                        <Label Grid.Row="1" Text="{Binding Status}" TextColor="{Binding StatusColor}" FontSize="14" />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

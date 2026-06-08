@@ -1,6 +1,7 @@
 {
   "recommendations": [
-    "sweetpad.sweetpad",
-    "vadimcn.vscode-lldb"
+    "ms-dotnettools.dotnet-maui",
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp"
   ]
 }

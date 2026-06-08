@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="DamageTracker.Views.AlertsPage"
+    x:Name="Page"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:DamageTracker.Controls"
+    xmlns:models="clr-namespace:DamageTracker.Models"
+    Title="Active Warnings">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <controls:CategoryFilterBar Grid.Row="0" />
+        <BoxView Grid.Row="1" HeightRequest="1" Color="#22808080" />
+
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Alerts}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="6" VerticalOptions="Center">
+                        <Label Text="No active warnings" FontSize="18" FontAttributes="Bold"
+                               HorizontalOptions="Center" />
+                        <Label Text="{Binding ErrorMessage}" FontSize="13" TextColor="Gray"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:StormAlert">
+                        <Grid Padding="14,10" ColumnDefinitions="6,*" ColumnSpacing="10">
+                            <BoxView Grid.Column="0" Color="{Binding Color}" CornerRadius="3" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                <Label Text="{Binding Event}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding AreaDesc}" FontSize="13" TextColor="Gray"
+                                       MaxLines="2" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding Expires, StringFormat='Until {0:t}'}"
+                                       FontSize="12" TextColor="Gray" />
+                            </VerticalStackLayout>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>
