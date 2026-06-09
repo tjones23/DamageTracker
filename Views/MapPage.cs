@@ -1,45 +1,43 @@
 using System.Windows.Input;
 using DamageTracker.Controls;
-using DamageTracker.Maps;
 using DamageTracker.Models;
 using DamageTracker.Services;
 using DamageTracker.ViewModels;
-using Mapsui;
-using Mapsui.Layers;
-using Mapsui.Projections;
-using Mapsui.Styles;
-using Mapsui.Tiling;
-using Mapsui.UI.Maui;
+using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Maps;
 using MauiColor = Microsoft.Maui.Graphics.Color;
-using Color = Mapsui.Styles.Color;
-using Brush = Mapsui.Styles.Brush;
-using Pen = Mapsui.Styles.Pen;
+using NativeMap = Microsoft.Maui.Controls.Maps.Map;
+using MapPolygon = Microsoft.Maui.Controls.Maps.Polygon;
 
 namespace DamageTracker.Views;
 
+/// <summary>Storm map backed by the native platform map (Apple Maps on iOS,
+/// Google Maps on Android). Dark mode and the user-location dot are native; SPC
+/// outlooks and NWS alerts are drawn as polygons/polylines, and storm reports +
+/// alert centroids are pins.</summary>
 public sealed class MapPage : ContentPage
 {
     private readonly MapViewModel _vm;
     private readonly AppState _state;
     private readonly LocationService _location;
 
-    private readonly MapControl _mapControl = new();
-    private readonly MemoryLayer _outlookFillLayer = new() { Name = "outlook-fill", Style = null };
-    private readonly MemoryLayer _hatchLayer = new() { Name = "hatch", Style = null };
-    private readonly MemoryLayer _alertLayer = new() { Name = "alerts", Style = null };
-    private readonly MemoryLayer _reportLayer = new() { Name = "reports", Style = null };
-    private readonly MemoryLayer _userLayer = new() { Name = "user", Style = null };
+    private readonly NativeMap _map = new()
+    {
+        IsShowingUser = true,
+        MapType = MapType.Street,
+    };
+
+    private readonly Dictionary<Pin, StormReport> _reportPins = new();
+    private readonly Dictionary<Pin, StormAlert> _alertPins = new();
+
     private readonly VerticalStackLayout _legendStack = new() { Spacing = 4 };
     private readonly Border _legend;
-    private readonly MRect _usRect;
-    private bool _zoomed;
+    private bool _framed;
 
-    private readonly Slider _zoomSlider = new();
-    private bool _suppressZoom;
-
-    // Approx iOS tab bar height (bar + home indicator) used to extend the map
-    // under the floating tab bar and to lift bottom-anchored controls above it.
+    // Approx iOS tab bar height used to lift bottom-anchored chrome above the
+    // floating tab bar (the map itself is drawn under it).
     private const double TabBarInset = 84;
 
     public MapPage(MapViewModel vm, AppState state, LocationService location)
@@ -54,40 +52,12 @@ public sealed class MapPage : ContentPage
         // float over the map (see BuildMapButtons).
         Shell.SetNavBarIsVisible(this, false);
 
-        // Mapsui map: OSM tiles + our overlay layers (bottom → top).
-        var map = new Mapsui.Map();
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
-        map.Layers.Add(_outlookFillLayer);
-        map.Layers.Add(_hatchLayer);
-        map.Layers.Add(_alertLayer);
-        map.Layers.Add(_reportLayer);
-        map.Layers.Add(_userLayer);
-
-        var (minX, minY) = SphericalMercator.FromLonLat(Geo.UsBounds.MinLon, Geo.UsBounds.MinLat);
-        var (maxX, maxY) = SphericalMercator.FromLonLat(Geo.UsBounds.MaxLon, Geo.UsBounds.MaxLat);
-        _usRect = new MRect(minX, minY, maxX, maxY);
-        map.Tapped += OnMapTapped;
-        // Hide Mapsui's built-in debug overlays so nothing renders on the map:
-        // disable the PerformanceWidget (FPS/timing box) and the on-map LoggingWidget.
-        // (Disabled widgets are skipped by the renderer; Map.Widgets isn't a plain list.)
-        foreach (var w in map.Widgets.OfType<Mapsui.Widgets.InfoWidgets.PerformanceWidget>())
-            w.Enabled = false;
-        Mapsui.Widgets.InfoWidgets.LoggingWidget.ShowLoggingInMap = Mapsui.Widgets.ActiveMode.No;
-        _mapControl.Map = map;
-        _mapControl.SizeChanged += (_, _) =>
-        {
-            if (_zoomed || _mapControl.Width <= 0) return;
-            _zoomed = true;
-            // Default to the user's location (same as the Locate button); fall
-            // back to the full US extent if no location fix is available.
-            CenterOnUser(fallbackToUs: true);
-        };
+        _map.MapClicked += OnMapClicked;
 
         _legend = new Border
         {
             Padding = 8,
             StrokeThickness = 0,
-            BackgroundColor = MauiColor.FromArgb("#CC1C1C1E"),
             StrokeShape = new RoundRectangle { CornerRadius = 8 },
             Margin = new Thickness(8, 0, 0, TabBarInset + 8),
             HorizontalOptions = LayoutOptions.Start,
@@ -95,139 +65,40 @@ public sealed class MapPage : ContentPage
             IsVisible = false,
             Content = _legendStack,
         };
+        // Bright translucent panel in light mode, dark in dark mode.
+        _legend.SetAppThemeColor(BackgroundColorProperty, MauiColor.FromArgb("#E6F3F3F0"), MauiColor.FromArgb("#CC1C1C1E"));
 
         var chrome = new VerticalStackLayout
         {
             VerticalOptions = LayoutOptions.Start,
-            Margin = new Thickness(0, 100, 0, 0), // clear status bar + floating buttons
+            Margin = new Thickness(0, 56, 0, 0), // sit just below the floating buttons
             Children = { new NearbyBanner() },
         };
 
-        // Negative bottom margin lets the map draw under the (transparent) tab
-        // bar so the bottom menu floats over it. Bottom-anchored controls below
-        // add matching margin to stay above the tab bar.
         Content = new Grid
         {
             Margin = new Thickness(0, 0, 0, -TabBarInset),
-            Children = { _mapControl, chrome, _legend, BuildZoomSlider(), BuildMapButtons() },
+            Children = { _map, chrome, _legend, BuildMapButtons() },
         };
-
-        _mapControl.Map.Navigator.ViewportChanged += (_, _) => SyncZoomSlider();
 
         _state.DataChanged += OnDataChanged;
         _state.FiltersChanged += OnDataChanged;
-        _location.PropertyChanged += (_, _) => MainThread.BeginInvokeOnMainThread(BuildUserLayer);
-        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildAll);
+        // The native map themes itself; only the overlay colors + legend depend on
+        // theme, so skip the (expensive) pin rebuild here.
+        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            BuildOverlays();
+            BuildLegend();
+        });
+
+        Loaded += (_, _) =>
+        {
+            if (_framed) return;
+            _framed = true;
+            CenterOnUser(fallbackToUs: true);
+        };
 
         RebuildAll();
-    }
-
-    // MARK: Floating controls
-
-    /// <summary>Floating menu (filters) + locate buttons over the top-right of
-    /// the map, replacing the hidden nav bar's toolbar items.</summary>
-    private View BuildMapButtons()
-    {
-        ImageButton Circle(string icon, ICommand command) => new()
-        {
-            Source = icon,
-            Command = command,
-            WidthRequest = 42,
-            HeightRequest = 42,
-            CornerRadius = 21,
-            Padding = 9,
-            BackgroundColor = MauiColor.FromArgb("#F2FFFFFF"),
-            Shadow = new Shadow
-            {
-                Brush = new SolidColorBrush(Colors.Black),
-                Offset = new Point(0, 2),
-                Radius = 6,
-                Opacity = 0.3f,
-            },
-        };
-
-        return new HorizontalStackLayout
-        {
-            Spacing = 10,
-            HorizontalOptions = LayoutOptions.End,
-            VerticalOptions = LayoutOptions.Start,
-            Margin = new Thickness(0, 8, 12, 0),
-            Children =
-            {
-                Circle("menu.png", _vm.OpenFiltersCommand),
-                Circle("locate.png", new Command(() => CenterOnUser())),
-            },
-        };
-    }
-
-    // MARK: Zoom slider
-
-    /// <summary>A vertical zoom slider pinned to the bottom-right of the map.
-    /// The Slider is horizontal natively, so it's rotated 270°; the container
-    /// Grid doesn't clip, so the rotated track renders within its bounds.</summary>
-    private View BuildZoomSlider()
-    {
-        _zoomSlider.Minimum = 0;
-        _zoomSlider.Maximum = 1;
-        _zoomSlider.WidthRequest = 160;          // becomes the vertical travel once rotated
-        _zoomSlider.Rotation = 270;
-        _zoomSlider.HorizontalOptions = LayoutOptions.Center;
-        _zoomSlider.VerticalOptions = LayoutOptions.Center;
-        _zoomSlider.ThumbColor = Colors.White;
-        _zoomSlider.MinimumTrackColor = Colors.White;
-        _zoomSlider.MaximumTrackColor = MauiColor.FromArgb("#80FFFFFF");
-        _zoomSlider.ValueChanged += OnZoomSliderChanged;
-
-        var background = new Border
-        {
-            StrokeThickness = 0,
-            BackgroundColor = MauiColor.FromArgb("#CC1C1C1E"),
-            StrokeShape = new RoundRectangle { CornerRadius = 16 },
-        };
-
-        return new Grid
-        {
-            WidthRequest = 46,
-            HeightRequest = 184,
-            Margin = new Thickness(0, 0, 8, TabBarInset + 16),
-            HorizontalOptions = LayoutOptions.End,
-            VerticalOptions = LayoutOptions.End,
-            Children = { background, _zoomSlider },
-        };
-    }
-
-    private double MinResolution()
-    {
-        var r = _mapControl.Map.Navigator.Resolutions;
-        return r is { Count: > 0 } ? r.Min() : 0.3;
-    }
-
-    private double MaxResolution()
-    {
-        var r = _mapControl.Map.Navigator.Resolutions;
-        return r is { Count: > 0 } ? r.Max() : 156543;
-    }
-
-    // Slider value (0 = zoomed out, 1 = zoomed in) maps to resolution on a log
-    // scale, since each zoom level halves the resolution.
-    private void OnZoomSliderChanged(object? sender, ValueChangedEventArgs e)
-    {
-        if (_suppressZoom) return;
-        double min = MinResolution(), max = MaxResolution();
-        if (max <= min) return;
-        double res = max * Math.Pow(min / max, e.NewValue);
-        _mapControl.Map.Navigator.ZoomTo(res);
-    }
-
-    private void SyncZoomSlider()
-    {
-        double min = MinResolution(), max = MaxResolution();
-        double res = _mapControl.Map.Navigator.Viewport.Resolution;
-        if (res <= 0 || max <= min) return;
-        double v = Math.Log(max / res) / Math.Log(max / min);
-        _suppressZoom = true;
-        _zoomSlider.Value = Math.Clamp(v, 0, 1);
-        _suppressZoom = false;
     }
 
     private bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
@@ -236,124 +107,112 @@ public sealed class MapPage : ContentPage
 
     private void RebuildAll()
     {
-        BuildOutlookLayers();
-        BuildAlertLayer();
-        BuildReportLayer();
-        BuildUserLayer();
+        BuildOverlays();
+        BuildPins();
         BuildLegend();
     }
 
-    // MARK: Outlooks
+    // MARK: Outlooks + alerts (polygons / hatch lines)
 
-    private void BuildOutlookLayers()
+    private void BuildOverlays()
     {
         bool dark = IsDark;
-        var fills = new List<IFeature>();
-        var hatches = new List<IFeature>();
+        _map.MapElements.Clear();
 
         foreach (var feature in _state.VisibleOutlookFeatures)
         {
-            // VectorStyle defaults Fill to solid white; keep null so hatched
-            // areas stay transparent and the risk fill below shows through.
-            var strokeStyle = new VectorStyle { Fill = null, Outline = new Pen(OutlookStroke(feature.StrokeColor, dark), 2.5) };
-            if (!feature.IsHatched)
-                strokeStyle.Fill = new Brush(OutlookFill(feature.FillColor, dark));
+            // Hatched "significant" areas: a native map can't draw a hatch pattern,
+            // and rendering the hundreds of individual hatch lines as overlays
+            // freezes the map. Indicate them with a heavier outline + faint fill
+            // instead; the legend explains the meaning.
+            var stroke = OutlookStroke(feature.StrokeColor, dark);
+            var fill = feature.IsHatched
+                ? OutlookStroke(feature.FillColor, dark).WithAlpha(0.18f)
+                : OutlookFill(feature.FillColor, dark);
+            float width = feature.IsHatched ? ((feature.CigLevel ?? 1) >= 2 ? 4 : 3) : 2;
 
             foreach (var ring in feature.Rings)
-            {
-                var poly = MapsuiHelpers.PolygonFeature(ring, CloneStyle(strokeStyle));
-                if (poly is not null) fills.Add(poly);
-            }
-
-            if (feature.IsHatched)
-            {
-                bool bold = (feature.CigLevel ?? 1) >= 2;
-                var pen = new Pen(Color.Black, bold ? 4.5 : 1.3);
-                foreach (var seg in feature.HatchLines)
-                    hatches.Add(MapsuiHelpers.LineFeature(seg, new VectorStyle { Line = pen }));
-            }
+                _map.MapElements.Add(MakePolygon(ring, stroke, width, fill));
         }
 
-        _outlookFillLayer.Features = fills;
-        _hatchLayer.Features = hatches;
-        _outlookFillLayer.DataHasChanged();
-        _hatchLayer.DataHasChanged();
-    }
-
-    private static VectorStyle CloneStyle(VectorStyle s) =>
-        new() { Fill = s.Fill, Outline = s.Outline, Line = s.Line };
-
-    private Color OutlookFill(MauiColor baseColor, bool dark) => MapsuiHelpers.ToMapsui(
-        dark ? ColorUtil.Adjusted(baseColor, 2.1, 1.15) : ColorUtil.Adjusted(baseColor, 1.55, 1.02),
-        dark ? 0.62 : 0.60);
-
-    private Color OutlookStroke(MauiColor baseColor, bool dark) => MapsuiHelpers.ToMapsui(
-        dark ? ColorUtil.Adjusted(baseColor, 1.5, 1.45) : ColorUtil.Adjusted(baseColor, 1.4));
-
-    // MARK: Alerts / reports / user
-
-    private void BuildAlertLayer()
-    {
-        var features = new List<IFeature>();
         foreach (var alert in _state.FilteredAlerts)
-        {
-            var style = new VectorStyle
-            {
-                Fill = new Brush(MapsuiHelpers.ToMapsui(alert.Color, 0.22)),
-                Outline = new Pen(MapsuiHelpers.ToMapsui(alert.Color), 2),
-            };
             foreach (var ring in alert.Polygons)
-            {
-                var poly = MapsuiHelpers.PolygonFeature(ring, CloneStyle(style));
-                if (poly is not null) features.Add(poly);
-            }
-            if (alert.Centroid is { } center)
-            {
-                features.Add(MapsuiHelpers.PointMarker(center, new SymbolStyle
-                {
-                    SymbolType = SymbolType.Rectangle,
-                    SymbolScale = 0.7,
-                    Fill = new Brush(MapsuiHelpers.ToMapsui(alert.Color)),
-                    Outline = new Pen(Color.White, 1),
-                }));
-            }
-        }
-        _alertLayer.Features = features;
-        _alertLayer.DataHasChanged();
+                _map.MapElements.Add(MakePolygon(ring, alert.Color, 2, alert.Color.WithAlpha(0.22f)));
     }
 
-    private void BuildReportLayer()
+    private static MapPolygon MakePolygon(IReadOnlyList<Coordinate> ring, MauiColor stroke, float strokeWidth, MauiColor fill)
     {
-        var features = new List<IFeature>();
+        var poly = new MapPolygon { StrokeColor = stroke, StrokeWidth = strokeWidth, FillColor = fill };
+        foreach (var c in ring) poly.Geopath.Add(new Location(c.Latitude, c.Longitude));
+        return poly;
+    }
+
+    private static MauiColor OutlookFill(MauiColor baseColor, bool dark) =>
+        (dark ? ColorUtil.Adjusted(baseColor, 2.1, 1.15) : ColorUtil.Adjusted(baseColor, 1.55, 1.02))
+            .WithAlpha(dark ? 0.62f : 0.60f);
+
+    private static MauiColor OutlookStroke(MauiColor baseColor, bool dark) =>
+        dark ? ColorUtil.Adjusted(baseColor, 1.5, 1.45) : ColorUtil.Adjusted(baseColor, 1.4);
+
+    // MARK: Pins (reports + alert centroids)
+
+    private void BuildPins()
+    {
+        foreach (var p in _reportPins.Keys) p.MarkerClicked -= OnReportPinClicked;
+        foreach (var p in _alertPins.Keys) p.MarkerClicked -= OnAlertPinClicked;
+        _reportPins.Clear();
+        _alertPins.Clear();
+        _map.Pins.Clear();
+        MapMarkers.Reset();
+
         foreach (var report in _state.FilteredReports)
         {
-            features.Add(MapsuiHelpers.PointMarker(report.Coordinate, new SymbolStyle
+            var pin = new Pin
             {
-                SymbolType = SymbolType.Ellipse,
-                SymbolScale = 0.55,
-                Fill = new Brush(MapsuiHelpers.ToMapsui(report.Color)),
-                Outline = new Pen(Color.White, 2),
-            }));
+                Label = report.Title,
+                Address = report.Subtitle,
+                Location = new Location(report.Coordinate.Latitude, report.Coordinate.Longitude),
+                Type = PinType.Place,
+            };
+            pin.MarkerClicked += OnReportPinClicked;
+            _reportPins[pin] = report;
+            MapMarkers.Add(report.Coordinate.Latitude, report.Coordinate.Longitude, report.Category);
+            _map.Pins.Add(pin);
         }
-        _reportLayer.Features = features;
-        _reportLayer.DataHasChanged();
+
+        foreach (var alert in _state.FilteredAlerts)
+        {
+            if (alert.Centroid is not { } center) continue;
+            var pin = new Pin
+            {
+                Label = alert.Event,
+                Address = alert.AreaDesc ?? string.Empty,
+                Location = new Location(center.Latitude, center.Longitude),
+                Type = PinType.Generic,
+            };
+            pin.MarkerClicked += OnAlertPinClicked;
+            _alertPins[pin] = alert;
+            MapMarkers.Add(center.Latitude, center.Longitude, alert.Category);
+            _map.Pins.Add(pin);
+        }
     }
 
-    private void BuildUserLayer()
+    private void OnReportPinClicked(object? sender, PinClickedEventArgs e)
     {
-        var features = new List<IFeature>();
-        if (_location.Coordinate is { } c)
+        if (sender is Pin pin && _reportPins.TryGetValue(pin, out var report))
         {
-            features.Add(MapsuiHelpers.PointMarker(c, new SymbolStyle
-            {
-                SymbolType = SymbolType.Ellipse,
-                SymbolScale = 0.5,
-                Fill = new Brush(new Color(10, 120, 255)),
-                Outline = new Pen(Color.White, 2),
-            }));
+            e.HideInfoWindow = true;
+            MainThread.BeginInvokeOnMainThread(() => Shell.Current.Navigation.PushAsync(new ReportDetailPage(report)));
         }
-        _userLayer.Features = features;
-        _userLayer.DataHasChanged();
+    }
+
+    private void OnAlertPinClicked(object? sender, PinClickedEventArgs e)
+    {
+        if (sender is Pin pin && _alertPins.TryGetValue(pin, out var alert))
+        {
+            e.HideInfoWindow = true;
+            MainThread.BeginInvokeOnMainThread(() => Shell.Current.Navigation.PushAsync(new AlertDetailPage(alert)));
+        }
     }
 
     // MARK: Legend
@@ -373,7 +232,8 @@ public sealed class MapPage : ContentPage
             return;
         }
 
-        _legendStack.Add(new Label { Text = "SPC Outlook", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Colors.White });
+        var textColor = IsDark ? Colors.White : Colors.Black;
+        _legendStack.Add(new Label { Text = "SPC Outlook", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = textColor });
         foreach (var item in items)
         {
             var swatch = new Border
@@ -390,11 +250,53 @@ public sealed class MapPage : ContentPage
                 Children =
                 {
                     swatch,
-                    new Label { Text = string.IsNullOrEmpty(item.Detail) ? item.Label : item.Detail, FontSize = 12, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
+                    new Label { Text = string.IsNullOrEmpty(item.Detail) ? item.Label : item.Detail, FontSize = 12, TextColor = textColor, VerticalOptions = LayoutOptions.Center },
                 },
             });
         }
         _legend.IsVisible = true;
+    }
+
+    // MARK: Floating controls
+
+    /// <summary>Floating menu (filters) + locate buttons over the top-right of
+    /// the map, replacing the hidden nav bar's toolbar items.</summary>
+    private View BuildMapButtons()
+    {
+        ImageButton Circle(string lightIcon, string darkIcon, ICommand command)
+        {
+            var button = new ImageButton
+            {
+                Command = command,
+                WidthRequest = 42,
+                HeightRequest = 42,
+                CornerRadius = 21,
+                Padding = 9,
+                Shadow = new Shadow
+                {
+                    Brush = new SolidColorBrush(Colors.Black),
+                    Offset = new Point(0, 2),
+                    Radius = 6,
+                    Opacity = 0.3f,
+                },
+            };
+            button.SetAppThemeColor(BackgroundColorProperty, MauiColor.FromArgb("#F2FFFFFF"), MauiColor.FromArgb("#3A3A3C"));
+            button.SetAppTheme(ImageButton.SourceProperty, (ImageSource)lightIcon, (ImageSource)darkIcon);
+            return button;
+        }
+
+        return new HorizontalStackLayout
+        {
+            Spacing = 10,
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Start,
+            Margin = new Thickness(0, 8, 12, 0),
+            Children =
+            {
+                Circle("menu.png", "menu_dark.png", _vm.OpenFiltersCommand),
+                Circle("locate.png", "locate_dark.png", new Command(() => CenterOnUser())),
+            },
+        };
     }
 
     // MARK: Interaction
@@ -404,51 +306,32 @@ public sealed class MapPage : ContentPage
         _location.RefreshAsync().ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() =>
         {
             if (_location.Coordinate is { } c)
-                _mapControl.Map.Navigator.CenterOnAndZoomTo(MapsuiHelpers.Project(c), 600);
+                _map.MoveToRegion(MapSpan.FromCenterAndRadius(
+                    new Location(c.Latitude, c.Longitude), Distance.FromKilometers(40)));
             else if (fallbackToUs)
-                _mapControl.Map.Navigator.ZoomToBox(_usRect);
+                _map.MoveToRegion(UsRegion());
         }));
     }
 
-    private void OnMapTapped(object? sender, MapEventArgs e)
+    private static MapSpan UsRegion()
     {
-        var tap = e.WorldPosition;
-        double resolution = _mapControl.Map.Navigator.Viewport.Resolution;
-        double threshold = resolution * 22; // ~22px hit radius
+        double centerLat = (Geo.UsBounds.MinLat + Geo.UsBounds.MaxLat) / 2;
+        double centerLon = (Geo.UsBounds.MinLon + Geo.UsBounds.MaxLon) / 2;
+        return new MapSpan(
+            new Location(centerLat, centerLon),
+            Geo.UsBounds.MaxLat - Geo.UsBounds.MinLat,
+            Geo.UsBounds.MaxLon - Geo.UsBounds.MinLon);
+    }
 
-        // Nearest report marker
-        var report = Nearest(_state.FilteredReports, r => r.Coordinate, tap, threshold);
-        if (report is not null)
-        {
-            MainThread.BeginInvokeOnMainThread(() => Shell.Current.Navigation.PushAsync(new ReportDetailPage(report)));
-            e.Handled = true;
-            return;
-        }
-
-        // Nearest alert centroid marker
-        var alert = _state.FilteredAlerts.Where(a => a.Centroid is not null)
-            .Select(a => (a, p: MapsuiHelpers.Project(a.Centroid!.Value)))
-            .Where(t => Dist(t.p, tap) <= threshold)
-            .OrderBy(t => Dist(t.p, tap))
-            .Select(t => t.a).FirstOrDefault();
-        if (alert is not null)
-        {
-            MainThread.BeginInvokeOnMainThread(() => Shell.Current.Navigation.PushAsync(new AlertDetailPage(alert)));
-            e.Handled = true;
-            return;
-        }
-
-        // Outlook hit-test (cumulative, excluding general thunderstorms)
-        var coord = MapsuiHelpers.Unproject(tap.X, tap.Y);
+    private void OnMapClicked(object? sender, MapClickedEventArgs e)
+    {
+        var coord = new Coordinate(e.Location.Latitude, e.Location.Longitude);
         var seen = new HashSet<string>();
         var hits = _state.VisibleOutlookFeatures
             .Where(f => f.Contains(coord) && !f.IsGeneralThunderstorm && seen.Add(f.Label + f.Detail))
             .ToList();
         if (hits.Count > 0)
-        {
-            e.Handled = true;
             MainThread.BeginInvokeOnMainThread(() => ShowOutlookDialog(hits));
-        }
     }
 
     private async void ShowOutlookDialog(List<OutlookFeature> hits)
@@ -460,23 +343,5 @@ public sealed class MapPage : ContentPage
         if (choice is null or "Cancel") return;
         if (product is not null)
             await Browser.Default.OpenAsync(product.DiscussionUrl, BrowserLaunchMode.SystemPreferred);
-    }
-
-    private static StormReport? Nearest(IReadOnlyList<StormReport> items, Func<StormReport, Coordinate> coord, MPoint tap, double threshold)
-    {
-        StormReport? best = null;
-        double bestD = threshold;
-        foreach (var r in items)
-        {
-            double d = Dist(MapsuiHelpers.Project(coord(r)), tap);
-            if (d <= bestD) { bestD = d; best = r; }
-        }
-        return best;
-    }
-
-    private static double Dist(MPoint a, MPoint b)
-    {
-        double dx = a.X - b.X, dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
     }
 }

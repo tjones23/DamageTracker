@@ -2,7 +2,6 @@ using DamageTracker.Services;
 using DamageTracker.ViewModels;
 using DamageTracker.Views;
 using Microsoft.Extensions.Logging;
-using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace DamageTracker;
 
@@ -13,7 +12,13 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseSkiaSharp()
+            .UseMauiMaps()  // Apple Maps on iOS, Google Maps on Android
+            .ConfigureMauiHandlers(handlers =>
+            {
+#if IOS
+                handlers.AddHandler<Microsoft.Maui.Controls.Maps.Map, StormMapHandler>();
+#endif
+            })
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

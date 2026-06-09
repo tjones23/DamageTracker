@@ -9,12 +9,9 @@
     Shell.NavBarIsVisible="False"
     Title="">
 
-    <Grid Margin="0,0,0,-84">
+    <Grid>
         <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Reports}" SelectionMode="None">
-                <CollectionView.Footer>
-                    <BoxView HeightRequest="84" Color="Transparent" />
-                </CollectionView.Footer>
                 <CollectionView.Header>
                     <Grid Padding="12,10" Margin="0,48,0,0" ColumnDefinitions="*,*,*" BindingContext="{Binding Source={x:Reference Page}, Path=BindingContext}">
                         <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
@@ -65,9 +62,9 @@
             </CollectionView>
         </RefreshView>
 
-        <ImageButton Source="menu.png" Command="{Binding OpenFiltersCommand}"
+        <ImageButton Source="{AppThemeBinding Light=menu.png, Dark=menu_dark.png}" Command="{Binding OpenFiltersCommand}"
                      WidthRequest="42" HeightRequest="42" CornerRadius="21" Padding="9"
-                     BackgroundColor="#F2FFFFFF"
+                     BackgroundColor="{AppThemeBinding Light=#F2FFFFFF, Dark=#3A3A3C}"
                      HorizontalOptions="End" VerticalOptions="Start" Margin="0,8,12,0">
             <ImageButton.Shadow>
                 <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.3" />
