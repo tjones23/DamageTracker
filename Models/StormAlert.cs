@@ -31,6 +31,18 @@ public sealed class StormAlert
 
     public bool IsWarning => Event.Contains("warning", StringComparison.OrdinalIgnoreCase);
 
+    public bool IsWatch => Event.Contains("watch", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Rank for sorting by severity (0 = most severe).</summary>
+    public int SeverityRank => Severity?.ToLowerInvariant() switch
+    {
+        "extreme" => 0,
+        "severe" => 1,
+        "moderate" => 2,
+        "minor" => 3,
+        _ => 4,
+    };
+
     public Color Color
     {
         get

@@ -7,13 +7,13 @@
     Title="DamageTracker">
 
     <TabBar>
-        <ShellContent Title="Map"
+        <ShellContent Title="Map" Icon="tab_map.png"
                       ContentTemplate="{DataTemplate views:MapPage}" Route="map" />
-        <ShellContent Title="Reports"
+        <ShellContent Title="Reports" Icon="tab_reports.png"
                       ContentTemplate="{DataTemplate views:ReportsPage}" Route="reports" />
-        <ShellContent Title="Warnings"
+        <ShellContent Title="Warnings" Icon="tab_warnings.png"
                       ContentTemplate="{DataTemplate views:AlertsPage}" Route="warnings" />
-        <ShellContent Title="Saved"
+        <ShellContent Title="Saved" Icon="tab_saved.png"
                       ContentTemplate="{DataTemplate views:SavedLocationsPage}" Route="saved" />
     </TabBar>
 

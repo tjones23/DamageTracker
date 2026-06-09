@@ -70,7 +70,7 @@ public sealed partial class AppState : ObservableObject
     // MARK: Filtering
 
     public IReadOnlyList<StormAlert> FilteredAlerts =>
-        Alerts.Where(a => Filters.IsEnabled(a.Category)).ToList();
+        Alerts.Where(Filters.PassesAlert).ToList();
 
     public IReadOnlyList<StormReport> FilteredReports =>
         Reports.Where(Filters.Passes).ToList();

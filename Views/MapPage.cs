@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using DamageTracker.Controls;
 using DamageTracker.Maps;
 using DamageTracker.Models;
@@ -34,16 +35,24 @@ public sealed class MapPage : ContentPage
     private readonly MRect _usRect;
     private bool _zoomed;
 
+    private readonly Slider _zoomSlider = new();
+    private bool _suppressZoom;
+
+    // Approx iOS tab bar height (bar + home indicator) used to extend the map
+    // under the floating tab bar and to lift bottom-anchored controls above it.
+    private const double TabBarInset = 84;
+
     public MapPage(MapViewModel vm, AppState state, LocationService location)
     {
         _vm = vm;
         _state = state;
         _location = location;
         BindingContext = vm;
-        Title = "Storm Map";
+        Title = "";
 
-        ToolbarItems.Add(new ToolbarItem { Text = "Filter", Command = vm.OpenFiltersCommand });
-        ToolbarItems.Add(new ToolbarItem { Text = "Locate", Command = new Command(CenterOnUser) });
+        // Hide the nav bar so the map fills the screen; the menu/locate controls
+        // float over the map (see BuildMapButtons).
+        Shell.SetNavBarIsVisible(this, false);
 
         // Mapsui map: OSM tiles + our overlay layers (bottom → top).
         var map = new Mapsui.Map();
@@ -58,12 +67,20 @@ public sealed class MapPage : ContentPage
         var (maxX, maxY) = SphericalMercator.FromLonLat(Geo.UsBounds.MaxLon, Geo.UsBounds.MaxLat);
         _usRect = new MRect(minX, minY, maxX, maxY);
         map.Tapped += OnMapTapped;
+        // Hide Mapsui's built-in debug overlays so nothing renders on the map:
+        // disable the PerformanceWidget (FPS/timing box) and the on-map LoggingWidget.
+        // (Disabled widgets are skipped by the renderer; Map.Widgets isn't a plain list.)
+        foreach (var w in map.Widgets.OfType<Mapsui.Widgets.InfoWidgets.PerformanceWidget>())
+            w.Enabled = false;
+        Mapsui.Widgets.InfoWidgets.LoggingWidget.ShowLoggingInMap = Mapsui.Widgets.ActiveMode.No;
         _mapControl.Map = map;
         _mapControl.SizeChanged += (_, _) =>
         {
             if (_zoomed || _mapControl.Width <= 0) return;
             _zoomed = true;
-            _mapControl.Map.Navigator.ZoomToBox(_usRect);
+            // Default to the user's location (same as the Locate button); fall
+            // back to the full US extent if no location fix is available.
+            CenterOnUser(fallbackToUs: true);
         };
 
         _legend = new Border
@@ -72,7 +89,7 @@ public sealed class MapPage : ContentPage
             StrokeThickness = 0,
             BackgroundColor = MauiColor.FromArgb("#CC1C1C1E"),
             StrokeShape = new RoundRectangle { CornerRadius = 8 },
-            Margin = new Thickness(8, 0, 0, 8),
+            Margin = new Thickness(8, 0, 0, TabBarInset + 8),
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.End,
             IsVisible = false,
@@ -82,10 +99,20 @@ public sealed class MapPage : ContentPage
         var chrome = new VerticalStackLayout
         {
             VerticalOptions = LayoutOptions.Start,
-            Children = { new CategoryFilterBar { BackgroundColor = MauiColor.FromArgb("#CCF2F2F7") }, new NearbyBanner() },
+            Margin = new Thickness(0, 100, 0, 0), // clear status bar + floating buttons
+            Children = { new NearbyBanner() },
         };
 
-        Content = new Grid { Children = { _mapControl, chrome, _legend } };
+        // Negative bottom margin lets the map draw under the (transparent) tab
+        // bar so the bottom menu floats over it. Bottom-anchored controls below
+        // add matching margin to stay above the tab bar.
+        Content = new Grid
+        {
+            Margin = new Thickness(0, 0, 0, -TabBarInset),
+            Children = { _mapControl, chrome, _legend, BuildZoomSlider(), BuildMapButtons() },
+        };
+
+        _mapControl.Map.Navigator.ViewportChanged += (_, _) => SyncZoomSlider();
 
         _state.DataChanged += OnDataChanged;
         _state.FiltersChanged += OnDataChanged;
@@ -93,6 +120,114 @@ public sealed class MapPage : ContentPage
         Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildAll);
 
         RebuildAll();
+    }
+
+    // MARK: Floating controls
+
+    /// <summary>Floating menu (filters) + locate buttons over the top-right of
+    /// the map, replacing the hidden nav bar's toolbar items.</summary>
+    private View BuildMapButtons()
+    {
+        ImageButton Circle(string icon, ICommand command) => new()
+        {
+            Source = icon,
+            Command = command,
+            WidthRequest = 42,
+            HeightRequest = 42,
+            CornerRadius = 21,
+            Padding = 9,
+            BackgroundColor = MauiColor.FromArgb("#F2FFFFFF"),
+            Shadow = new Shadow
+            {
+                Brush = new SolidColorBrush(Colors.Black),
+                Offset = new Point(0, 2),
+                Radius = 6,
+                Opacity = 0.3f,
+            },
+        };
+
+        return new HorizontalStackLayout
+        {
+            Spacing = 10,
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Start,
+            Margin = new Thickness(0, 8, 12, 0),
+            Children =
+            {
+                Circle("menu.png", _vm.OpenFiltersCommand),
+                Circle("locate.png", new Command(() => CenterOnUser())),
+            },
+        };
+    }
+
+    // MARK: Zoom slider
+
+    /// <summary>A vertical zoom slider pinned to the bottom-right of the map.
+    /// The Slider is horizontal natively, so it's rotated 270°; the container
+    /// Grid doesn't clip, so the rotated track renders within its bounds.</summary>
+    private View BuildZoomSlider()
+    {
+        _zoomSlider.Minimum = 0;
+        _zoomSlider.Maximum = 1;
+        _zoomSlider.WidthRequest = 160;          // becomes the vertical travel once rotated
+        _zoomSlider.Rotation = 270;
+        _zoomSlider.HorizontalOptions = LayoutOptions.Center;
+        _zoomSlider.VerticalOptions = LayoutOptions.Center;
+        _zoomSlider.ThumbColor = Colors.White;
+        _zoomSlider.MinimumTrackColor = Colors.White;
+        _zoomSlider.MaximumTrackColor = MauiColor.FromArgb("#80FFFFFF");
+        _zoomSlider.ValueChanged += OnZoomSliderChanged;
+
+        var background = new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = MauiColor.FromArgb("#CC1C1C1E"),
+            StrokeShape = new RoundRectangle { CornerRadius = 16 },
+        };
+
+        return new Grid
+        {
+            WidthRequest = 46,
+            HeightRequest = 184,
+            Margin = new Thickness(0, 0, 8, TabBarInset + 16),
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.End,
+            Children = { background, _zoomSlider },
+        };
+    }
+
+    private double MinResolution()
+    {
+        var r = _mapControl.Map.Navigator.Resolutions;
+        return r is { Count: > 0 } ? r.Min() : 0.3;
+    }
+
+    private double MaxResolution()
+    {
+        var r = _mapControl.Map.Navigator.Resolutions;
+        return r is { Count: > 0 } ? r.Max() : 156543;
+    }
+
+    // Slider value (0 = zoomed out, 1 = zoomed in) maps to resolution on a log
+    // scale, since each zoom level halves the resolution.
+    private void OnZoomSliderChanged(object? sender, ValueChangedEventArgs e)
+    {
+        if (_suppressZoom) return;
+        double min = MinResolution(), max = MaxResolution();
+        if (max <= min) return;
+        double res = max * Math.Pow(min / max, e.NewValue);
+        _mapControl.Map.Navigator.ZoomTo(res);
+    }
+
+    private void SyncZoomSlider()
+    {
+        double min = MinResolution(), max = MaxResolution();
+        double res = _mapControl.Map.Navigator.Viewport.Resolution;
+        if (res <= 0 || max <= min) return;
+        double v = Math.Log(max / res) / Math.Log(max / min);
+        _suppressZoom = true;
+        _zoomSlider.Value = Math.Clamp(v, 0, 1);
+        _suppressZoom = false;
     }
 
     private bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
@@ -118,7 +253,9 @@ public sealed class MapPage : ContentPage
 
         foreach (var feature in _state.VisibleOutlookFeatures)
         {
-            var strokeStyle = new VectorStyle { Outline = new Pen(OutlookStroke(feature.StrokeColor, dark), 2.5) };
+            // VectorStyle defaults Fill to solid white; keep null so hatched
+            // areas stay transparent and the risk fill below shows through.
+            var strokeStyle = new VectorStyle { Fill = null, Outline = new Pen(OutlookStroke(feature.StrokeColor, dark), 2.5) };
             if (!feature.IsHatched)
                 strokeStyle.Fill = new Brush(OutlookFill(feature.FillColor, dark));
 
@@ -262,12 +399,14 @@ public sealed class MapPage : ContentPage
 
     // MARK: Interaction
 
-    private void CenterOnUser()
+    private void CenterOnUser(bool fallbackToUs = false)
     {
         _location.RefreshAsync().ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() =>
         {
             if (_location.Coordinate is { } c)
                 _mapControl.Map.Navigator.CenterOnAndZoomTo(MapsuiHelpers.Project(c), 600);
+            else if (fallbackToUs)
+                _mapControl.Map.Navigator.ZoomToBox(_usRect);
         }));
     }
 
