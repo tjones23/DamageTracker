@@ -1,4 +1,7 @@
 using System.Windows.Input;
+using BruTile;
+using BruTile.Predefined;
+using BruTile.Web;
 using DamageTracker.Controls;
 using DamageTracker.Maps;
 using DamageTracker.Models;
@@ -9,6 +12,7 @@ using Mapsui.Layers;
 using Mapsui.Projections;
 using Mapsui.Styles;
 using Mapsui.Tiling;
+using Mapsui.Tiling.Layers;
 using Mapsui.UI.Maui;
 using Microsoft.Maui.Controls.Shapes;
 using MauiColor = Microsoft.Maui.Graphics.Color;
@@ -38,6 +42,11 @@ public sealed class MapPage : ContentPage
     private readonly Slider _zoomSlider = new();
     private bool _suppressZoom;
 
+    // Light (OSM) and dark (CARTO) basemaps; only one is enabled at a time so the
+    // map matches the system theme (and the glass tab bar reads correctly over it).
+    private readonly TileLayer _lightBasemap = OpenStreetMap.CreateTileLayer();
+    private readonly TileLayer _darkBasemap = CreateDarkBasemap();
+
     // Approx iOS tab bar height (bar + home indicator) used to extend the map
     // under the floating tab bar and to lift bottom-anchored controls above it.
     private const double TabBarInset = 84;
@@ -54,9 +63,11 @@ public sealed class MapPage : ContentPage
         // float over the map (see BuildMapButtons).
         Shell.SetNavBarIsVisible(this, false);
 
-        // Mapsui map: OSM tiles + our overlay layers (bottom → top).
+        // Mapsui map: basemaps (only one enabled) + overlay layers (bottom → top).
         var map = new Mapsui.Map();
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        map.Layers.Add(_darkBasemap);
+        map.Layers.Add(_lightBasemap);
+        ApplyBasemapTheme();
         map.Layers.Add(_outlookFillLayer);
         map.Layers.Add(_hatchLayer);
         map.Layers.Add(_alertLayer);
@@ -99,7 +110,7 @@ public sealed class MapPage : ContentPage
         var chrome = new VerticalStackLayout
         {
             VerticalOptions = LayoutOptions.Start,
-            Margin = new Thickness(0, 100, 0, 0), // clear status bar + floating buttons
+            Margin = new Thickness(0, 56, 0, 0), // sit just below the floating buttons
             Children = { new NearbyBanner() },
         };
 
@@ -117,9 +128,36 @@ public sealed class MapPage : ContentPage
         _state.DataChanged += OnDataChanged;
         _state.FiltersChanged += OnDataChanged;
         _location.PropertyChanged += (_, _) => MainThread.BeginInvokeOnMainThread(BuildUserLayer);
-        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildAll);
+        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            ApplyBasemapTheme();
+            RebuildAll();
+        });
 
         RebuildAll();
+    }
+
+    // MARK: Basemap
+
+    /// <summary>Enables the basemap matching the current system theme so the map
+    /// (and the translucent tab bar over it) is dark in dark mode.</summary>
+    private void ApplyBasemapTheme()
+    {
+        bool dark = IsDark;
+        _darkBasemap.Enabled = dark;
+        _lightBasemap.Enabled = !dark;
+        // Refresh so the newly-enabled basemap fetches tiles for the current viewport.
+        _mapControl.Map?.Refresh();
+    }
+
+    private static TileLayer CreateDarkBasemap()
+    {
+        var source = new HttpTileSource(
+            new GlobalSphericalMercator(),
+            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+            name: "CARTO Dark",
+            attribution: new Attribution("© OpenStreetMap contributors, © CARTO", "https://carto.com/attributions"));
+        return new TileLayer(source) { Name = "dark-basemap" };
     }
 
     // MARK: Floating controls
