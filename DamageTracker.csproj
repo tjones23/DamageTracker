@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-ios;net10.0-android</TargetFrameworks>
+		<RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -45,6 +46,12 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
+		<!-- Forces .NET MAUI to use Xcode's automatic signing mechanism -->
+		<CodesignKey>Apple Development: Universal</CodesignKey>
+		<CodesignProvision>Automatic</CodesignProvision>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -69,6 +76,13 @@
 		<PackageReference Include="Mapsui.Tiling" Version="5.1.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
+		<PackageReference Include="SkiaSharp" Version="3.119.4" />
+    	<PackageReference Include="SkiaSharp.NativeAssets.iOS" Version="3.119.4" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="8.3.1.5" />
+      	<PackageReference Include="HarfBuzzSharp" Version="8.3.1.5" />
 	</ItemGroup>
 
 </Project>

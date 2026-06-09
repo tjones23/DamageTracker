@@ -1,3 +1,5 @@
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using System.Globalization;
 
@@ -6,6 +8,14 @@ namespace DamageTracker.Services;
 /// <summary>Color parsing and adjustment ported from the iOS Color extensions.</summary>
 public static class ColorUtil
 {
+    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+
+    /// <summary>Background for an unselected ("off") chip, theme-aware.</summary>
+    public static Color ChipOff => IsDark ? Color.FromArgb("#3A3A3C") : Color.FromArgb("#E2E2E6");
+
+    /// <summary>Text/glyph color on an unselected chip, theme-aware.</summary>
+    public static Color ChipOffText => IsDark ? Colors.White : Colors.Black;
+
     /// <summary>Parses "#RRGGBB" into RGB components in 0..1.</summary>
     public static (double R, double G, double B)? RgbComponents(string? hex)
     {

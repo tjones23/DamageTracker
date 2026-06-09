@@ -51,16 +51,23 @@ public sealed class CategoryFilterBar : ContentView
 
         _state.FiltersChanged += UpdateVisuals;
         Loaded += (_, _) => UpdateVisuals();
-        Unloaded += (_, _) => _state.FiltersChanged -= UpdateVisuals;
+        if (Application.Current is { } app) app.RequestedThemeChanged += OnThemeChanged;
+        Unloaded += (_, _) =>
+        {
+            _state.FiltersChanged -= UpdateVisuals;
+            if (Application.Current is { } app) app.RequestedThemeChanged -= OnThemeChanged;
+        };
     }
+
+    private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e) => UpdateVisuals();
 
     private void UpdateVisuals()
     {
         foreach (var (cat, chip) in _chips)
         {
             bool on = _state.Filters.IsEnabled(cat);
-            chip.BackgroundColor = on ? cat.Color() : Color.FromArgb("#E2E2E6");
-            _labels[cat].TextColor = on ? Colors.White : Colors.Black;
+            chip.BackgroundColor = on ? cat.Color() : ColorUtil.ChipOff;
+            _labels[cat].TextColor = on ? Colors.White : ColorUtil.ChipOffText;
         }
     }
 }

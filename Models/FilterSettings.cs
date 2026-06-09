@@ -9,6 +9,10 @@ public sealed class FilterSettings
     public bool ShowWind { get; set; } = true;
     public bool ShowHail { get; set; } = true;
 
+    // Which NWS alert kinds to show (map + warnings screen).
+    public bool ShowWarnings { get; set; } = true;
+    public bool ShowWatches { get; set; } = true;
+
     // Magnitude thresholds. 0 / null = no minimum (includes unrated).
     public int MinWindMph { get; set; }
     public double MinHailInches { get; set; }
@@ -28,6 +32,10 @@ public sealed class FilterSettings
         StormCategory.Hail => ShowHail,
         _ => false,
     };
+
+    /// <summary>Whether an alert passes the active category + warning/watch filters.</summary>
+    public bool PassesAlert(StormAlert alert) =>
+        IsEnabled(alert.Category) && (alert.IsWatch ? ShowWatches : ShowWarnings);
 
     /// <summary>Whether a report passes the active category + magnitude filters.</summary>
     public bool Passes(StormReport report)

@@ -4,19 +4,61 @@
     x:Name="Page"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:controls="clr-namespace:DamageTracker.Controls"
     xmlns:models="clr-namespace:DamageTracker.Models"
-    Title="Active Warnings">
+    Shell.NavBarIsVisible="False"
+    Title="">
 
-    <Grid RowDefinitions="Auto,Auto,*">
-        <controls:CategoryFilterBar Grid.Row="0" />
+    <Grid RowDefinitions="Auto,Auto,*" Margin="0,0,0,-84">
+        <Grid Grid.Row="0" Padding="12,8" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+            <Border Grid.Column="0" BackgroundColor="{Binding WarningsChipColor}"
+                    StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,7">
+                <Label Text="Warnings" TextColor="{Binding WarningsTextColor}"
+                       FontAttributes="Bold" FontSize="14" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ToggleWarningsCommand}" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Border Grid.Column="1" BackgroundColor="{Binding WatchesChipColor}"
+                    StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,7">
+                <Label Text="Watches" TextColor="{Binding WatchesTextColor}"
+                       FontAttributes="Bold" FontSize="14" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ToggleWatchesCommand}" />
+                </Border.GestureRecognizers>
+            </Border>
+            <HorizontalStackLayout Grid.Column="3" Spacing="6" VerticalOptions="Center">
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{AppThemeBinding Light=#E2E2E6, Dark=#3A3A3C}" Padding="12,7">
+                    <HorizontalStackLayout Spacing="6">
+                        <Image Source="{AppThemeBinding Light=sort.png, Dark=sort_dark.png}"
+                               WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                        <Label Text="{Binding SortLabel}" FontSize="14" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CycleSortCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{AppThemeBinding Light=#E2E2E6, Dark=#3A3A3C}" Padding="11,7">
+                    <Label Text="{Binding SortArrow}" FontSize="14" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=Black, Dark=White}" VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleSortDirectionCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </HorizontalStackLayout>
+        </Grid>
         <BoxView Grid.Row="1" HeightRequest="1" Color="#22808080" />
 
         <RefreshView Grid.Row="2" IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Alerts}" SelectionMode="None">
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="84" Color="Transparent" />
+                </CollectionView.Footer>
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="6" VerticalOptions="Center">
-                        <Label Text="No active warnings" FontSize="18" FontAttributes="Bold"
+                        <Label Text="No active alerts" FontSize="18" FontAttributes="Bold"
                                HorizontalOptions="Center" />
                         <Label Text="{Binding ErrorMessage}" FontSize="13" TextColor="Gray"
                                HorizontalTextAlignment="Center" />
