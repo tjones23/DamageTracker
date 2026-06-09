@@ -42,10 +42,12 @@ public sealed class MapPage : ContentPage
     private readonly Slider _zoomSlider = new();
     private bool _suppressZoom;
 
-    // Light (OSM) and dark (CARTO) basemaps; only one is enabled at a time so the
-    // map matches the system theme (and the glass tab bar reads correctly over it).
+    // Light (OSM) and dark (Esri Dark Gray Canvas) basemaps; only the set matching
+    // the system theme is enabled so the map — and the glass tab bar over it —
+    // reads correctly. Esri's gray canvas is light enough to stay readable.
     private readonly TileLayer _lightBasemap = OpenStreetMap.CreateTileLayer();
-    private readonly TileLayer _darkBasemap = CreateDarkBasemap();
+    private readonly TileLayer _darkBase = CreateEsriLayer("World_Dark_Gray_Base", "dark-base");
+    private readonly TileLayer _darkLabels = CreateEsriLayer("World_Dark_Gray_Reference", "dark-labels");
 
     // Approx iOS tab bar height (bar + home indicator) used to extend the map
     // under the floating tab bar and to lift bottom-anchored controls above it.
@@ -65,7 +67,8 @@ public sealed class MapPage : ContentPage
 
         // Mapsui map: basemaps (only one enabled) + overlay layers (bottom → top).
         var map = new Mapsui.Map();
-        map.Layers.Add(_darkBasemap);
+        map.Layers.Add(_darkBase);
+        map.Layers.Add(_darkLabels);
         map.Layers.Add(_lightBasemap);
         ApplyBasemapTheme();
         map.Layers.Add(_outlookFillLayer);
@@ -144,20 +147,21 @@ public sealed class MapPage : ContentPage
     private void ApplyBasemapTheme()
     {
         bool dark = IsDark;
-        _darkBasemap.Enabled = dark;
+        _darkBase.Enabled = dark;
+        _darkLabels.Enabled = dark;
         _lightBasemap.Enabled = !dark;
         // Refresh so the newly-enabled basemap fetches tiles for the current viewport.
         _mapControl.Map?.Refresh();
     }
 
-    private static TileLayer CreateDarkBasemap()
+    private static TileLayer CreateEsriLayer(string service, string name)
     {
         var source = new HttpTileSource(
             new GlobalSphericalMercator(),
-            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-            name: "CARTO Dark",
-            attribution: new Attribution("© OpenStreetMap contributors, © CARTO", "https://carto.com/attributions"));
-        return new TileLayer(source) { Name = "dark-basemap" };
+            $"https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/{service}/MapServer/tile/{{z}}/{{y}}/{{x}}",
+            name: name,
+            attribution: new Attribution("© Esri, © OpenStreetMap contributors", "https://www.esri.com"));
+        return new TileLayer(source) { Name = name };
     }
 
     // MARK: Floating controls
