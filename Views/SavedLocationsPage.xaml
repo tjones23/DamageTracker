@@ -32,9 +32,9 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <ImageButton Source="add.png" Command="{Binding AddCommand}"
+        <ImageButton Source="{AppThemeBinding Light=add.png, Dark=add_dark.png}" Command="{Binding AddCommand}"
                      WidthRequest="42" HeightRequest="42" CornerRadius="21" Padding="9"
-                     BackgroundColor="#F2FFFFFF"
+                     BackgroundColor="{AppThemeBinding Light=#F2FFFFFF, Dark=#3A3A3C}"
                      HorizontalOptions="End" VerticalOptions="Start" Margin="0,8,12,0">
             <ImageButton.Shadow>
                 <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.3" />
