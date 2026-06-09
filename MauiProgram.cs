@@ -13,6 +13,12 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiMaps()  // Apple Maps on iOS, Google Maps on Android
+            .ConfigureMauiHandlers(handlers =>
+            {
+#if IOS
+                handlers.AddHandler<Microsoft.Maui.Controls.Maps.Map, StormMapHandler>();
+#endif
+            })
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

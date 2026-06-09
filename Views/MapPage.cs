@@ -59,7 +59,6 @@ public sealed class MapPage : ContentPage
         {
             Padding = 8,
             StrokeThickness = 0,
-            BackgroundColor = MauiColor.FromArgb("#CC1C1C1E"),
             StrokeShape = new RoundRectangle { CornerRadius = 8 },
             Margin = new Thickness(8, 0, 0, TabBarInset + 8),
             HorizontalOptions = LayoutOptions.Start,
@@ -67,6 +66,8 @@ public sealed class MapPage : ContentPage
             IsVisible = false,
             Content = _legendStack,
         };
+        // Bright translucent panel in light mode, dark in dark mode.
+        _legend.SetAppThemeColor(BackgroundColorProperty, MauiColor.FromArgb("#E6F3F3F0"), MauiColor.FromArgb("#CC1C1C1E"));
 
         var chrome = new VerticalStackLayout
         {
@@ -83,6 +84,8 @@ public sealed class MapPage : ContentPage
 
         _state.DataChanged += OnDataChanged;
         _state.FiltersChanged += OnDataChanged;
+        // The native map themes itself, but our overlay colors + legend depend on theme.
+        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildAll);
 
         Loaded += (_, _) =>
         {
@@ -172,6 +175,7 @@ public sealed class MapPage : ContentPage
                 Address = report.Subtitle,
                 Location = new Location(report.Coordinate.Latitude, report.Coordinate.Longitude),
                 Type = PinType.Place,
+                ClassId = report.Category.ToString(), // drives the colored marker (iOS handler)
             };
             pin.MarkerClicked += OnReportPinClicked;
             _reportPins[pin] = report;
@@ -187,6 +191,7 @@ public sealed class MapPage : ContentPage
                 Address = alert.AreaDesc ?? string.Empty,
                 Location = new Location(center.Latitude, center.Longitude),
                 Type = PinType.Generic,
+                ClassId = alert.Category.ToString(),
             };
             pin.MarkerClicked += OnAlertPinClicked;
             _alertPins[pin] = alert;
@@ -229,7 +234,8 @@ public sealed class MapPage : ContentPage
             return;
         }
 
-        _legendStack.Add(new Label { Text = "SPC Outlook", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Colors.White });
+        var textColor = IsDark ? Colors.White : Colors.Black;
+        _legendStack.Add(new Label { Text = "SPC Outlook", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = textColor });
         foreach (var item in items)
         {
             var swatch = new Border
@@ -246,7 +252,7 @@ public sealed class MapPage : ContentPage
                 Children =
                 {
                     swatch,
-                    new Label { Text = string.IsNullOrEmpty(item.Detail) ? item.Label : item.Detail, FontSize = 12, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
+                    new Label { Text = string.IsNullOrEmpty(item.Detail) ? item.Label : item.Detail, FontSize = 12, TextColor = textColor, VerticalOptions = LayoutOptions.Center },
                 },
             });
         }
