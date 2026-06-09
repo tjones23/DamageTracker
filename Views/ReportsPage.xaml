@@ -9,12 +9,9 @@
     Shell.NavBarIsVisible="False"
     Title="">
 
-    <Grid Margin="0,0,0,-84">
+    <Grid>
         <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Reports}" SelectionMode="None">
-                <CollectionView.Footer>
-                    <BoxView HeightRequest="84" Color="Transparent" />
-                </CollectionView.Footer>
                 <CollectionView.Header>
                     <Grid Padding="12,10" Margin="0,48,0,0" ColumnDefinitions="*,*,*" BindingContext="{Binding Source={x:Reference Page}, Path=BindingContext}">
                         <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">

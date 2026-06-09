@@ -8,7 +8,7 @@
     Shell.NavBarIsVisible="False"
     Title="">
 
-    <Grid RowDefinitions="Auto,Auto,*" Margin="0,0,0,-84">
+    <Grid RowDefinitions="Auto,Auto,*">
         <Grid Grid.Row="0" Padding="12,8" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
             <Border Grid.Column="0" BackgroundColor="{Binding WarningsChipColor}"
                     StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,7">
@@ -53,9 +53,6 @@
 
         <RefreshView Grid.Row="2" IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Alerts}" SelectionMode="None">
-                <CollectionView.Footer>
-                    <BoxView HeightRequest="84" Color="Transparent" />
-                </CollectionView.Footer>
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="6" VerticalOptions="Center">
                         <Label Text="No active alerts" FontSize="18" FontAttributes="Bold"
