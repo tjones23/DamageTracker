@@ -11,7 +11,7 @@
                       ContentTemplate="{DataTemplate views:MapPage}" Route="map" />
         <ShellContent Title="Reports" Icon="tab_reports.png"
                       ContentTemplate="{DataTemplate views:ReportsPage}" Route="reports" />
-        <ShellContent Title="Warnings" Icon="tab_warnings.png"
+        <ShellContent Title="Alerts" Icon="tab_warnings.png"
                       ContentTemplate="{DataTemplate views:AlertsPage}" Route="warnings" />
         <ShellContent Title="Saved" Icon="tab_saved.png"
                       ContentTemplate="{DataTemplate views:SavedLocationsPage}" Route="saved" />

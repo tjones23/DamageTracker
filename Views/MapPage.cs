@@ -128,23 +128,29 @@ public sealed class MapPage : ContentPage
     /// the map, replacing the hidden nav bar's toolbar items.</summary>
     private View BuildMapButtons()
     {
-        ImageButton Circle(string icon, ICommand command) => new()
+        ImageButton Circle(string lightIcon, string darkIcon, ICommand command)
         {
-            Source = icon,
-            Command = command,
-            WidthRequest = 42,
-            HeightRequest = 42,
-            CornerRadius = 21,
-            Padding = 9,
-            BackgroundColor = MauiColor.FromArgb("#F2FFFFFF"),
-            Shadow = new Shadow
+            var button = new ImageButton
             {
-                Brush = new SolidColorBrush(Colors.Black),
-                Offset = new Point(0, 2),
-                Radius = 6,
-                Opacity = 0.3f,
-            },
-        };
+                Command = command,
+                WidthRequest = 42,
+                HeightRequest = 42,
+                CornerRadius = 21,
+                Padding = 9,
+                Shadow = new Shadow
+                {
+                    Brush = new SolidColorBrush(Colors.Black),
+                    Offset = new Point(0, 2),
+                    Radius = 6,
+                    Opacity = 0.3f,
+                },
+            };
+            // Match the Saved "+" / Warnings sort buttons: white circle with a
+            // black glyph in light mode; dark-gray with a white glyph in dark mode.
+            button.SetAppThemeColor(BackgroundColorProperty, MauiColor.FromArgb("#F2FFFFFF"), MauiColor.FromArgb("#3A3A3C"));
+            button.SetAppTheme(ImageButton.SourceProperty, (ImageSource)lightIcon, (ImageSource)darkIcon);
+            return button;
+        }
 
         return new HorizontalStackLayout
         {
@@ -154,8 +160,8 @@ public sealed class MapPage : ContentPage
             Margin = new Thickness(0, 8, 12, 0),
             Children =
             {
-                Circle("menu.png", _vm.OpenFiltersCommand),
-                Circle("locate.png", new Command(() => CenterOnUser())),
+                Circle("menu.png", "menu_dark.png", _vm.OpenFiltersCommand),
+                Circle("locate.png", "locate_dark.png", new Command(() => CenterOnUser())),
             },
         };
     }
