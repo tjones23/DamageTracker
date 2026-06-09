@@ -46,23 +46,24 @@ public sealed partial class AppState : ObservableObject
     {
         IsLoading = true;
         ErrorMessage = null;
-        try
-        {
-            var alertsTask = _nws.FetchActiveAlertsAsync();
-            var reportsTask = _reports.FetchRecentReportsAsync(Filters.ReportDays);
-            await Task.WhenAll(alertsTask, reportsTask);
-            Alerts = alertsTask.Result.OrderByDescending(a => a.Expires ?? DateTime.MinValue).ToList();
-            Reports = reportsTask.Result;
-            LastUpdated = DateTime.Now;
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Couldn't load storm data. Pull to retry.\n({ex.Message})";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+
+        // Fetch both feeds in parallel but apply them independently so one failing
+        // service (e.g. a flaky NWS alerts endpoint) doesn't blank out the other.
+        var alertsTask = _nws.FetchActiveAlertsAsync();
+        var reportsTask = _reports.FetchRecentReportsAsync(Filters.ReportDays);
+        var errors = new List<string>();
+
+        try { Alerts = (await alertsTask).OrderByDescending(a => a.Expires ?? DateTime.MinValue).ToList(); }
+        catch (Exception ex) { errors.Add(ex.Message); }
+
+        try { Reports = await reportsTask; }
+        catch (Exception ex) { errors.Add(ex.Message); }
+
+        LastUpdated = DateTime.Now;
+        ErrorMessage = errors.Count == 0 ? null
+            : $"Couldn't load some storm data. Pull to retry.\n({string.Join("; ", errors)})";
+        IsLoading = false;
+
         await LoadSelectedOutlookAsync(force: true);
         DataChanged?.Invoke();
     }

@@ -10,7 +10,6 @@ using Microsoft.Maui.Maps;
 using MauiColor = Microsoft.Maui.Graphics.Color;
 using NativeMap = Microsoft.Maui.Controls.Maps.Map;
 using MapPolygon = Microsoft.Maui.Controls.Maps.Polygon;
-using MapPolyline = Microsoft.Maui.Controls.Maps.Polyline;
 
 namespace DamageTracker.Views;
 
@@ -84,8 +83,13 @@ public sealed class MapPage : ContentPage
 
         _state.DataChanged += OnDataChanged;
         _state.FiltersChanged += OnDataChanged;
-        // The native map themes itself, but our overlay colors + legend depend on theme.
-        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(RebuildAll);
+        // The native map themes itself; only the overlay colors + legend depend on
+        // theme, so skip the (expensive) pin rebuild here.
+        Application.Current!.RequestedThemeChanged += (_, _) => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            BuildOverlays();
+            BuildLegend();
+        });
 
         Loaded += (_, _) =>
         {
@@ -117,18 +121,18 @@ public sealed class MapPage : ContentPage
 
         foreach (var feature in _state.VisibleOutlookFeatures)
         {
+            // Hatched "significant" areas: a native map can't draw a hatch pattern,
+            // and rendering the hundreds of individual hatch lines as overlays
+            // freezes the map. Indicate them with a heavier outline + faint fill
+            // instead; the legend explains the meaning.
             var stroke = OutlookStroke(feature.StrokeColor, dark);
-            var fill = feature.IsHatched ? Colors.Transparent : OutlookFill(feature.FillColor, dark);
+            var fill = feature.IsHatched
+                ? OutlookStroke(feature.FillColor, dark).WithAlpha(0.18f)
+                : OutlookFill(feature.FillColor, dark);
+            float width = feature.IsHatched ? ((feature.CigLevel ?? 1) >= 2 ? 4 : 3) : 2;
 
             foreach (var ring in feature.Rings)
-                _map.MapElements.Add(MakePolygon(ring, stroke, 2, fill));
-
-            if (feature.IsHatched)
-            {
-                bool bold = (feature.CigLevel ?? 1) >= 2;
-                foreach (var seg in feature.HatchLines)
-                    _map.MapElements.Add(MakePolyline(seg, Colors.Black, bold ? 3 : 1));
-            }
+                _map.MapElements.Add(MakePolygon(ring, stroke, width, fill));
         }
 
         foreach (var alert in _state.FilteredAlerts)
@@ -141,13 +145,6 @@ public sealed class MapPage : ContentPage
         var poly = new MapPolygon { StrokeColor = stroke, StrokeWidth = strokeWidth, FillColor = fill };
         foreach (var c in ring) poly.Geopath.Add(new Location(c.Latitude, c.Longitude));
         return poly;
-    }
-
-    private static MapPolyline MakePolyline(IReadOnlyList<Coordinate> segment, MauiColor stroke, float strokeWidth)
-    {
-        var line = new MapPolyline { StrokeColor = stroke, StrokeWidth = strokeWidth };
-        foreach (var c in segment) line.Geopath.Add(new Location(c.Latitude, c.Longitude));
-        return line;
     }
 
     private static MauiColor OutlookFill(MauiColor baseColor, bool dark) =>
@@ -166,6 +163,7 @@ public sealed class MapPage : ContentPage
         _reportPins.Clear();
         _alertPins.Clear();
         _map.Pins.Clear();
+        MapMarkers.Reset();
 
         foreach (var report in _state.FilteredReports)
         {
@@ -175,10 +173,10 @@ public sealed class MapPage : ContentPage
                 Address = report.Subtitle,
                 Location = new Location(report.Coordinate.Latitude, report.Coordinate.Longitude),
                 Type = PinType.Place,
-                ClassId = report.Category.ToString(), // drives the colored marker (iOS handler)
             };
             pin.MarkerClicked += OnReportPinClicked;
             _reportPins[pin] = report;
+            MapMarkers.Add(report.Coordinate.Latitude, report.Coordinate.Longitude, report.Category);
             _map.Pins.Add(pin);
         }
 
@@ -191,10 +189,10 @@ public sealed class MapPage : ContentPage
                 Address = alert.AreaDesc ?? string.Empty,
                 Location = new Location(center.Latitude, center.Longitude),
                 Type = PinType.Generic,
-                ClassId = alert.Category.ToString(),
             };
             pin.MarkerClicked += OnAlertPinClicked;
             _alertPins[pin] = alert;
+            MapMarkers.Add(center.Latitude, center.Longitude, alert.Category);
             _map.Pins.Add(pin);
         }
     }

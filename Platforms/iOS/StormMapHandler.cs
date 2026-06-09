@@ -1,7 +1,7 @@
 using CoreGraphics;
+using DamageTracker.Models;
+using DamageTracker.Services;
 using MapKit;
-using Microsoft.Maui.Controls.Maps;
-using Microsoft.Maui.Maps;
 using Microsoft.Maui.Maps.Handlers;
 using Microsoft.Maui.Maps.Platform;
 using UIKit;
@@ -11,7 +11,9 @@ namespace DamageTracker;
 
 /// <summary>Renders storm-report / alert pins as colored circular markers with a
 /// category glyph (Apple Maps), matching the original Swift app instead of the
-/// default red balloon. The category is carried on each Pin's ClassId.</summary>
+/// default red balloon. Marker images are cached per category, the category is
+/// looked up in O(1) via <see cref="MapMarkers"/>, and MapKit clustering keeps
+/// hundreds of reports performant.</summary>
 public class StormMapHandler : MapHandler
 {
     public static readonly IPropertyMapper<IMap, IMapHandler> StormMapper =
@@ -22,60 +24,66 @@ public class StormMapHandler : MapHandler
 
     public StormMapHandler() : base(StormMapper) { }
 
+    private static bool _syncScheduled;
+
     public new static void MapPins(IMapHandler handler, IMap map)
     {
         if (handler.PlatformView is MauiMKMapView nativeMap)
-            nativeMap.GetViewForAnnotation = (mapView, annotation) => GetViewForAnnotation(handler, mapView, annotation);
+            nativeMap.GetViewForAnnotation = GetViewForAnnotation;
 
-        MapHandler.MapPins(handler, map);
+        // MAUI invokes this mapper on EVERY Pins collection change, and the base
+        // implementation clears and re-adds *all* annotations — O(n^2) when adding
+        // many pins in a loop, which freezes the UI thread. Coalesce a burst of
+        // changes into a single sync on the next main-thread tick.
+        if (_syncScheduled) return;
+        _syncScheduled = true;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            _syncScheduled = false;
+            MapHandler.MapPins(handler, map);
+        });
     }
 
-    private static MKAnnotationView? GetViewForAnnotation(IMapHandler handler, MKMapView mapView, IMKAnnotation annotation)
+    private static MKAnnotationView? GetViewForAnnotation(MKMapView mapView, IMKAnnotation annotation)
     {
-        // Let MapKit draw the native blue user-location dot.
+        // Native blue user-location dot / default cluster bubble handled by MapKit.
         if (annotation is MKUserLocation) return null;
 
-        var pin = PinForAnnotation(handler, annotation);
-        if (pin is null) return null;
+        var coord = annotation.Coordinate;
+        if (MapMarkers.Lookup(coord.Latitude, coord.Longitude) is not { } category) return null;
 
         const string id = "storm-marker";
         var view = mapView.DequeueReusableAnnotation(id) ?? new MKAnnotationView(annotation, id);
         view.Annotation = annotation;
-        view.Image = MarkerImage(pin.ClassId);
+        view.Image = MarkerImage(category);
         view.CenterOffset = new CGPoint(0, 0);
         view.CanShowCallout = true;
+        view.ClusteringIdentifier = "storm"; // let MapKit cluster dense reports
         return view;
     }
 
-    /// <summary>Finds the MAUI Pin nearest the annotation's coordinate (an exact
-    /// match in practice, since each pin sits at a distinct report location).</summary>
-    private static Pin? PinForAnnotation(IMapHandler handler, IMKAnnotation annotation)
+    private static readonly Dictionary<StormCategory, UIImage> ImageCache = new();
+
+    private static UIImage MarkerImage(StormCategory category)
     {
-        var coord = annotation.Coordinate;
-        Pin? match = null;
-        double best = double.MaxValue;
-        foreach (var pin in handler.VirtualView.Pins.OfType<Pin>())
-        {
-            double dlat = pin.Location.Latitude - coord.Latitude;
-            double dlon = pin.Location.Longitude - coord.Longitude;
-            double dist = dlat * dlat + dlon * dlon;
-            if (dist < best) { best = dist; match = pin; }
-        }
-        return match;
+        if (ImageCache.TryGetValue(category, out var cached)) return cached;
+        var image = RenderMarker(category);
+        ImageCache[category] = image;
+        return image;
     }
 
-    private static UIImage MarkerImage(string? category)
+    private static UIImage RenderMarker(StormCategory category)
     {
         var (color, symbol) = category switch
         {
-            "Tornado" => (UIColor.FromRGB(0xFF, 0x00, 0x00), "tornado"),                 // Red
-            "Wind" => (UIColor.FromRGB(0x41, 0x69, 0xE1), "wind"),                       // RoyalBlue
-            "Hail" => (UIColor.FromRGB(0x2E, 0x8B, 0x57), "cloud.hail.fill"),            // SeaGreen
+            StormCategory.Tornado => (UIColor.FromRGB(0xFF, 0x00, 0x00), "tornado"),      // Red
+            StormCategory.Wind => (UIColor.FromRGB(0x41, 0x69, 0xE1), "wind"),            // RoyalBlue
+            StormCategory.Hail => (UIColor.FromRGB(0x2E, 0x8B, 0x57), "cloud.hail.fill"), // SeaGreen
             _ => (UIColor.SystemGray, "exclamationmark.circle.fill"),
         };
 
-        const float d = 34f;          // overall image size
-        const float inset = 2f;       // border thickness
+        const float d = 34f;     // overall image size
+        const float inset = 2f;  // border thickness
         var size = new CGSize(d, d);
         var renderer = new UIGraphicsImageRenderer(size);
 
