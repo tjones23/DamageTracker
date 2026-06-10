@@ -21,8 +21,10 @@ government data. Migrated from the original native iOS SwiftUI app.
   a single selectable SPC outlook with CIG **hatching**, a legend, and tap-to-open
   forecast discussion. Overlay colors are theme-aware (light/dark).
 - **Reports / Warnings** — filterable lists with pull-to-refresh; Warnings tab badge.
-- **Saved** — save home/work via current location or address search; see warnings
-  and nearby reports (within 50 mi) for each.
+- **Settings** — push-notification preferences (alerts for saved locations and/or
+  any severe warning matching the active filters) and saved-location management.
+- **Saved Locations** — save home/work via current location or address search; see
+  warnings and nearby reports (within 50 mi) for each.
 - **Filters** (persisted) — show/hide each storm type; min wind mph / hail inches /
   tornado EF rating; report day range; outlook selection.
 - **Location banner** when you're inside a warning or near recent reports.
@@ -37,7 +39,7 @@ ViewModels/    one per screen (CommunityToolkit.Mvvm)
 Views/         XAML pages + code-only detail pages
 Controls/      CategoryFilterBar, NearbyBanner
 Maps/          MapsuiHelpers + the map page's layer building
-AppShell.xaml  TabBar with Map / Reports / Warnings / Saved
+AppShell.xaml  TabBar with Map / Reports / Warnings / Settings
 ```
 
 `AppState` is the single source of truth (replaces the iOS `AppStore`); ViewModels and

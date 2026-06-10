@@ -5,8 +5,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:DamageTracker.ViewModels"
-    Shell.NavBarIsVisible="False"
-    Title="">
+    Title="Saved Locations">
 
     <Grid>
         <VerticalStackLayout IsVisible="{Binding IsEmpty}" Padding="28" Spacing="12" VerticalOptions="Center">

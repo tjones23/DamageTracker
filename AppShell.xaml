@@ -13,8 +13,8 @@
                       ContentTemplate="{DataTemplate views:ReportsPage}" Route="reports" />
         <ShellContent Title="Alerts" Icon="tab_warnings.png"
                       ContentTemplate="{DataTemplate views:AlertsPage}" Route="warnings" />
-        <ShellContent Title="Saved" Icon="tab_saved.png"
-                      ContentTemplate="{DataTemplate views:SavedLocationsPage}" Route="saved" />
+        <ShellContent Title="Settings" Icon="tab_settings.png"
+                      ContentTemplate="{DataTemplate views:SettingsPage}" Route="settings" />
     </TabBar>
 
 </Shell>

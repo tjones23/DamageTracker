@@ -31,6 +31,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SpcReportService>();
         builder.Services.AddSingleton<SpcOutlookService>();
         builder.Services.AddSingleton<LocationService>();
+        builder.Services.AddSingleton<INotificationService, NotificationService>();
         builder.Services.AddSingleton<AppState>();
 
         // ViewModels
@@ -40,12 +41,14 @@ public static class MauiProgram
         builder.Services.AddTransient<SavedLocationsViewModel>();
         builder.Services.AddTransient<FilterSettingsViewModel>();
         builder.Services.AddTransient<AddLocationViewModel>();
+        builder.Services.AddTransient<SettingsViewModel>();
 
         // Pages
         builder.Services.AddSingleton<MapPage>();
         builder.Services.AddTransient<ReportsPage>();
         builder.Services.AddTransient<AlertsPage>();
         builder.Services.AddTransient<SavedLocationsPage>();
+        builder.Services.AddTransient<SettingsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -11,13 +11,21 @@ public sealed partial class AppState : ObservableObject
     private readonly NwsService _nws;
     private readonly SpcReportService _reports;
     private readonly SpcOutlookService _outlooks;
+    private readonly INotificationService _notifications;
 
-    public AppState(NwsService nws, SpcReportService reports, SpcOutlookService outlooks)
+    /// <summary>IDs of warnings already checked against notification settings, or
+    /// null until the first refresh seeds a baseline.</summary>
+    private HashSet<string>? _seenAlertIds;
+
+    public AppState(NwsService nws, SpcReportService reports, SpcOutlookService outlooks, INotificationService notifications)
     {
         _nws = nws;
         _reports = reports;
         _outlooks = outlooks;
+        _notifications = notifications;
         Filters = PreferencesStore.LoadFilters();
+        NotificationSettings = PreferencesStore.LoadNotificationSettings();
+        _seenAlertIds = PreferencesStore.LoadSeenAlertIds();
         foreach (var loc in PreferencesStore.LoadSavedLocations())
             SavedLocations.Add(loc);
     }
@@ -30,6 +38,7 @@ public sealed partial class AppState : ObservableObject
     public Dictionary<string, List<OutlookFeature>> Outlooks { get; } = new();
 
     public FilterSettings Filters { get; private set; }
+    public NotificationSettings NotificationSettings { get; private set; }
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private DateTime? _lastUpdated;
@@ -65,7 +74,52 @@ public sealed partial class AppState : ObservableObject
         IsLoading = false;
 
         await LoadSelectedOutlookAsync(force: true);
+        CheckAlertNotifications();
         DataChanged?.Invoke();
+    }
+
+    // MARK: Notifications
+
+    /// <summary>Mutate notification settings, persist, and request OS permission
+    /// when an alert type is being turned on.</summary>
+    public async Task UpdateNotificationSettingsAsync(Action<NotificationSettings> mutate)
+    {
+        mutate(NotificationSettings);
+        PreferencesStore.SaveNotificationSettings(NotificationSettings);
+        if (NotificationSettings.AnyEnabled)
+            await _notifications.RequestPermissionAsync();
+    }
+
+    /// <summary>Notifies for newly-active warnings per <see cref="NotificationSettings"/>,
+    /// then updates the seen-alert baseline so each warning notifies at most once.</summary>
+    private void CheckAlertNotifications()
+    {
+        var active = Alerts.Where(a => a.IsWarning).ToList();
+        var activeIds = active.Select(a => a.Id).ToHashSet();
+
+        if (_seenAlertIds is { } seen && NotificationSettings.AnyEnabled)
+        {
+            foreach (var alert in active)
+            {
+                if (seen.Contains(alert.Id)) continue;
+
+                if (NotificationSettings.SavedLocationAlerts)
+                {
+                    var location = SavedLocations.FirstOrDefault(loc => alert.Contains(loc.Coordinate));
+                    if (location is not null)
+                    {
+                        _notifications.Show(alert.Event, $"{location.Name}: {alert.AreaDesc ?? alert.Headline ?? "New warning issued."}");
+                        continue;
+                    }
+                }
+
+                if (NotificationSettings.AnyWarningAlerts && Filters.PassesAlert(alert))
+                    _notifications.Show(alert.Event, alert.AreaDesc ?? alert.Headline ?? "New warning issued.");
+            }
+        }
+
+        _seenAlertIds = activeIds;
+        PreferencesStore.SaveSeenAlertIds(activeIds);
     }
 
     // MARK: Filtering
