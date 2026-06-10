@@ -12,8 +12,8 @@ namespace DamageTracker;
 /// <summary>Renders storm-report / alert pins as colored circular markers with a
 /// category glyph (Apple Maps), matching the original Swift app instead of the
 /// default red balloon. Marker images are cached per category, the category is
-/// looked up in O(1) via <see cref="MapMarkers"/>, and MapKit clustering keeps
-/// hundreds of reports performant.</summary>
+/// looked up in O(1) via <see cref="MapMarkers"/>. Clustering is disabled so each
+/// report stays an individual category pin rather than a red count bubble.</summary>
 public class StormMapHandler : MapHandler
 {
     public static readonly IPropertyMapper<IMap, IMapHandler> StormMapper =
@@ -46,7 +46,7 @@ public class StormMapHandler : MapHandler
 
     private static MKAnnotationView? GetViewForAnnotation(MKMapView mapView, IMKAnnotation annotation)
     {
-        // Native blue user-location dot / default cluster bubble handled by MapKit.
+        // Native blue user-location dot handled by MapKit.
         if (annotation is MKUserLocation) return null;
 
         var coord = annotation.Coordinate;
@@ -58,7 +58,10 @@ public class StormMapHandler : MapHandler
         view.Image = MarkerImage(category);
         view.CenterOffset = new CGPoint(0, 0);
         view.CanShowCallout = true;
-        view.ClusteringIdentifier = "storm"; // let MapKit cluster dense reports
+        // Render every report as its own category pin (hail/tornado/wind color +
+        // glyph) instead of collapsing dense areas into red count bubbles. Null is
+        // set explicitly because dequeued views may retain a prior identifier.
+        view.ClusteringIdentifier = null;
         return view;
     }
 
