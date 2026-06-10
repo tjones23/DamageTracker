@@ -124,14 +124,22 @@ public sealed partial class FilterSettingsViewModel : ObservableObject
 
     partial void OnMinWindMphChanged(double value)
     {
+        // Snap the continuous slider to 1 mph increments. Assigning the snapped
+        // value re-enters this handler once with snapped == value (idempotent), so
+        // there's no loop.
+        double snapped = Math.Round(value);
+        if (Math.Abs(snapped - value) > 1e-6) { MinWindMph = snapped; return; }
         UpdateMagnitudeLabels();
-        Apply(f => f.MinWindMph = (int)Math.Round(value));
+        Apply(f => f.MinWindMph = (int)snapped);
     }
 
     partial void OnMinHailInchesChanged(double value)
     {
+        // Snap the continuous slider to quarter-inch increments.
+        double snapped = Math.Round(value * 4) / 4;
+        if (Math.Abs(snapped - value) > 1e-6) { MinHailInches = snapped; return; }
         UpdateMagnitudeLabels();
-        Apply(f => f.MinHailInches = value);
+        Apply(f => f.MinHailInches = snapped);
     }
 
     partial void OnTornadoRatingIndexChanged(int value) =>

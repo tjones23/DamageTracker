@@ -135,6 +135,18 @@ public sealed class MapPage : ContentPage
                 _map.MapElements.Add(MakePolygon(ring, stroke, width, fill));
         }
 
+        // Shade where storm damage was reported. Reports are points, so nearby
+        // same-category reports are merged into one blob (see DamageAreas) and drawn
+        // beneath active alerts so live warnings stay prominent on top.
+        foreach (var area in DamageAreas.Build(_state.FilteredReports))
+        {
+            var color = area.Category.Color();
+            // Fill opacity scales with the worst report in the blob: a minor report
+            // stays near the original 0.20, an extreme one reads as a solid 0.68.
+            float fill = 0.20f + (float)area.Severity * (0.68f - 0.20f);
+            _map.MapElements.Add(MakePolygon(area.Ring, color.WithAlpha(0.85f), 1.5f, color.WithAlpha(fill)));
+        }
+
         foreach (var alert in _state.FilteredAlerts)
             foreach (var ring in alert.Polygons)
                 _map.MapElements.Add(MakePolygon(ring, alert.Color, 2, alert.Color.WithAlpha(0.22f)));
