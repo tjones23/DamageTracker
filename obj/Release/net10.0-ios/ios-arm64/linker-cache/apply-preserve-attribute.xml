@@ -1,0 +1,692 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="Microsoft.iOS">
+    <type fullname="AVFoundation.InternalAVAudioPlayerDelegate" required="false" preserve="nothing">
+      <method signature="System.Void BeginInterruption(AVFoundation.AVAudioPlayer)" required="false" />
+      <method signature="System.Void DecoderError(AVFoundation.AVAudioPlayer,Foundation.NSError)" required="false" />
+      <method signature="System.Void EndInterruption(AVFoundation.AVAudioPlayer)" required="false" />
+      <method signature="System.Void FinishedPlaying(AVFoundation.AVAudioPlayer,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AVFoundation.InternalAVAudioRecorderDelegate" required="false" preserve="nothing">
+      <method signature="System.Void BeginInterruption(AVFoundation.AVAudioRecorder)" required="false" />
+      <method signature="System.Void EncoderError(AVFoundation.AVAudioRecorder,Foundation.NSError)" required="false" />
+      <method signature="System.Void EndInterruption(AVFoundation.AVAudioRecorder)" required="false" />
+      <method signature="System.Void FinishedRecording(AVFoundation.AVAudioRecorder,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AVFoundation.InternalAVAudioSessionDelegate" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(AVFoundation.AVAudioSession)" required="false" />
+      <method signature="System.Void BeginInterruption()" required="false" />
+      <method signature="System.Void EndInterruption()" required="false" />
+      <method signature="System.Void InputIsAvailableChanged(System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABAddressBook" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABMultiValue`1" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABMutableMultiValue`1" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABPerson" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABRecord" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBook.ABSource" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AddressBookUI.InternalABNewPersonViewControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Void DidCompleteWithNewPerson(AddressBookUI.ABNewPersonViewController,AddressBook.ABPerson)" required="false" />
+    </type>
+    <type fullname="AddressBookUI.InternalABPeoplePickerNavigationControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Boolean RespondsToSelector(ObjCRuntime.Selector)" required="false" />
+      <method signature="System.Boolean ShouldContinue(AddressBookUI.ABPeoplePickerNavigationController,AddressBook.ABPerson)" required="false" />
+      <method signature="System.Boolean ShouldContinue(AddressBookUI.ABPeoplePickerNavigationController,AddressBook.ABPerson,System.Int32,System.Int32)" required="false" />
+      <method signature="System.Void Cancelled(AddressBookUI.ABPeoplePickerNavigationController)" required="false" />
+      <method signature="System.Void DidSelectPerson(AddressBookUI.ABPeoplePickerNavigationController,AddressBook.ABPerson)" required="false" />
+      <method signature="System.Void DidSelectPerson(AddressBookUI.ABPeoplePickerNavigationController,AddressBook.ABPerson,System.Int32,System.Int32)" required="false" />
+    </type>
+    <type fullname="AddressBookUI.InternalABPersonViewControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Boolean ShouldPerformDefaultActionForPerson(AddressBookUI.ABPersonViewController,AddressBook.ABPerson,System.Int32,System.Int32)" required="false" />
+    </type>
+    <type fullname="AddressBookUI.InternalABUnknownPersonViewControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Boolean ShouldPerformDefaultActionForPerson(AddressBookUI.ABUnknownPersonViewController,AddressBook.ABPerson,System.Int32,System.Int32)" required="false" />
+      <method signature="System.Void DidResolveToPerson(AddressBookUI.ABUnknownPersonViewController,AddressBook.ABPerson)" required="false" />
+    </type>
+    <type fullname="AudioToolbox.AudioConverter" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioToolbox.AudioFile" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioToolbox.MusicPlayer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioToolbox.MusicSequence" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioUnit.AUGraph" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioUnit.AURenderEventEnumerator" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioUnit.AudioComponent" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="AudioUnit.AudioUnit" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CFNetwork.CFHTTPAuthentication" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CFNetwork.CFHTTPMessage" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CFNetwork.CFHTTPStream" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CFNetwork.CFHost" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreAnimation.CALayer" required="false" preserve="nothing">
+      <method signature="System.Void OnDispose()" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFAllocator" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFArray" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFBoolean" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFBundle" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFData" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFDictionary" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFMachPort" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFMessagePort" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFMutableString" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFNotificationCenter" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFPropertyList" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFReadStream" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFRunLoop" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFRunLoopSource" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFStream" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFString" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFType" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFUrl" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.CFWriteStream" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchBlock" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchData" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchIO" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchObject" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchQueue" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.DispatchSource" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreFoundation.OSLog" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGBitmapContext" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGColor" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGColorConversionInfo" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGColorSpace" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGContext" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGDataConsumer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGDataProvider" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGFont" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGFunction" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGGradient" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGImage" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGLayer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPDFContentStream" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPDFDocument" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPDFOperatorTable" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPDFPage" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPDFScanner" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPath" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPattern" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGPointDictionary" required="false" preserve="nothing">
+      <method signature="System.Void .ctor()" required="false" />
+      <method signature="System.Void .ctor(Foundation.NSDictionary)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGRectDictionary" required="false" preserve="nothing">
+      <method signature="System.Void .ctor()" required="false" />
+      <method signature="System.Void .ctor(Foundation.NSDictionary)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGRenderingBufferProvider" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGShading" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreGraphics.CGSizeDictionary" required="false" preserve="nothing">
+      <method signature="System.Void .ctor()" required="false" />
+      <method signature="System.Void .ctor(Foundation.NSDictionary)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMAudioFormatDescription" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMBlockBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMClock" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMClockOrTimebase" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMFormatDescription" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMSampleBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMTagCollection" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMTaggedBufferGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMTimebase" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreMedia.CMVideoFormatDescription" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTFont" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTFontCollection" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTFontDescriptor" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTFrame" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTFramesetter" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTGlyphInfo" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTLine" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTParagraphStyle" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTRun" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTRunDelegate" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTTextTab" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreText.CTTypesetter" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVImageBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVMetalBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVMetalBufferCache" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVMetalTexture" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVMetalTextureCache" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVOpenGLESTexture" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVOpenGLESTextureCache" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVPixelBuffer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="CoreVideo.CVPixelBufferPool" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Foundation.InternalNSNotificationHandler" required="false" preserve="nothing">
+      <method signature="System.Void Post(Foundation.NSNotification)" required="false" />
+    </type>
+    <type fullname="Foundation.NSDispatcher" required="false" preserve="nothing">
+      <method signature="System.Void Apply()" required="false" />
+    </type>
+    <type fullname="Foundation.NSObject" preserve="nothing">
+      <method signature="System.Boolean ConformsToProtocol(ObjCRuntime.NativeHandle)" required="true" />
+      <method signature="System.Boolean InvokeConformsToProtocol(ObjCRuntime.NativeHandle)" required="true" />
+    </type>
+    <type fullname="Foundation.NSObject/NSObject_Disposer" preserve="all" />
+    <type fullname="Foundation.NSObject/Observer" required="false" preserve="nothing">
+      <method signature="System.Void ObserveValue(Foundation.NSString,Foundation.NSObject,Foundation.NSDictionary,System.IntPtr)" required="false" />
+    </type>
+    <type fullname="Foundation.NSTimerActionDispatcher" required="false" preserve="nothing">
+      <method signature="System.Void Fire(Foundation.NSTimer)" required="false" />
+    </type>
+    <type fullname="Foundation.NSZone" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="GameKit.GKSession/ReceiverObject" required="false" preserve="nothing">
+      <method signature="System.Void Receive(Foundation.NSData,System.String,GameKit.GKSession,System.IntPtr)" required="false" />
+    </type>
+    <type fullname="GameKit.Mono_GKSessionDelegate" required="false" preserve="nothing">
+      <method signature="System.Void FailedWithError(GameKit.GKSession,Foundation.NSError)" required="false" />
+      <method signature="System.Void PeerChangedState(GameKit.GKSession,System.String,GameKit.GKPeerConnectionState)" required="false" />
+      <method signature="System.Void PeerConnectionFailed(GameKit.GKSession,System.String,Foundation.NSError)" required="false" />
+      <method signature="System.Void PeerConnectionRequest(GameKit.GKSession,System.String)" required="false" />
+    </type>
+    <type fullname="GameplayKit.GKObstacleGraph`1" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle)" required="false" />
+    </type>
+    <type fullname="ImageIO.CGImageDestination" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ImageIO.CGImageMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ImageIO.CGImageMetadataTag" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ImageIO.CGImageSource" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="MessageUI.Mono_MFMailComposeViewControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Void Finished(MessageUI.MFMailComposeViewController,MessageUI.MFMailComposeResult,Foundation.NSError)" required="false" />
+    </type>
+    <type fullname="MessageUI.Mono_MFMessageComposeViewControllerDelegate" required="false" preserve="nothing">
+      <method signature="System.Void Finished(MessageUI.MFMessageComposeViewController,MessageUI.MessageComposeResult)" required="false" />
+    </type>
+    <type fullname="Metal.MTLIOCompressionContext" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NSProtocolFramerOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWAdvertiseDescriptor" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWBrowseResult" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWBrowser" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWBrowserDescriptor" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWConnection" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWConnectionGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWContentContext" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWDataTransferReport" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWEndpoint" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWError" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWEstablishmentReport" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWFramer" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWFramerMessage" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWIPMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWInterface" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWListener" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWMulticastGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWMultiplexGroup" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWParameters" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWPath" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWPathMonitor" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWPrivacyContext" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolDefinition" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolIPOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolQuicOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolStack" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolTcpOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolTlsOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProtocolUdpOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWProxyConfig" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWQuicMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWRelayHop" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWResolutionReport" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWResolverConfig" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWTcpMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWTlsMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWTxtRecord" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWUdpMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWWebSocketMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWWebSocketOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWWebSocketRequest" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Network.NWWebSocketResponse" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ObjCRuntime.Class" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ObjCRuntime.Protocol" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="ObjCRuntime.Runtime" preserve="nothing">
+      <method signature="System.Void Initialize(ObjCRuntime.Runtime/InitializationOptions*)" required="true" />
+      <method signature="System.Void SafeInitialize(ObjCRuntime.Runtime/InitializationOptions*,System.IntPtr*)" required="true" />
+    </type>
+    <type fullname="ObjCRuntime.Runtime/ClassHandles" preserve="nothing">
+      <method signature="System.Void SetHandle(System.Int32,ObjCRuntime.NativeHandle*,System.IntPtr*)" required="true" />
+    </type>
+    <type fullname="ObjCRuntime.Selector" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecAccessControl" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecCertificate" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecCertificate2" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecIdentity" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecIdentity2" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecKey" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecPolicy" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecProtocolMetadata" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecProtocolOptions" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecTrust" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="Security.SecTrust2" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="System.Net.Http.NSUrlSessionHandler/NSUrlSessionHandlerDelegate" required="false" preserve="nothing">
+      <method signature="System.Void DidCompleteWithError(Foundation.NSUrlSession,Foundation.NSUrlSessionTask,Foundation.NSError)" required="false" />
+      <method signature="System.Void DidReceiveChallenge(Foundation.NSUrlSession,Foundation.NSUrlSessionTask,Foundation.NSUrlAuthenticationChallenge,System.Action`2&lt;Foundation.NSUrlSessionAuthChallengeDisposition,Foundation.NSUrlCredential&gt;)" required="false" />
+      <method signature="System.Void DidReceiveData(Foundation.NSUrlSession,Foundation.NSUrlSessionDataTask,Foundation.NSData)" required="false" />
+      <method signature="System.Void DidReceiveResponse(Foundation.NSUrlSession,Foundation.NSUrlSessionDataTask,Foundation.NSUrlResponse,System.Action`1&lt;Foundation.NSUrlSessionResponseDisposition&gt;)" required="false" />
+      <method signature="System.Void WillCacheResponse(Foundation.NSUrlSession,Foundation.NSUrlSessionDataTask,Foundation.NSCachedUrlResponse,System.Action`1&lt;Foundation.NSCachedUrlResponse&gt;)" required="false" />
+      <method signature="System.Void WillPerformHttpRedirection(Foundation.NSUrlSession,Foundation.NSUrlSessionTask,Foundation.NSHttpUrlResponse,Foundation.NSUrlRequest,System.Action`1&lt;Foundation.NSUrlRequest&gt;)" required="false" />
+    </type>
+    <type fullname="System.Net.Http.NSUrlSessionHandler/WrappedNSInputStream" required="false" preserve="nothing">
+      <method signature="Foundation.NSError get_Error()" required="false" />
+      <method signature="Foundation.NSObject GetProperty(Foundation.NSString)" required="false" />
+      <method signature="Foundation.NSStreamStatus get_Status()" required="false" />
+      <method signature="System.Boolean GetBuffer(System.IntPtr&amp;,System.UIntPtr&amp;)" required="false" />
+      <method signature="System.Boolean HasBytesAvailable()" required="false" />
+      <method signature="System.Boolean SetCFClientFlags(CoreFoundation.CFStreamEventType,System.IntPtr,System.IntPtr)" required="false" />
+      <method signature="System.Boolean SetProperty(Foundation.NSObject,Foundation.NSString)" required="false" />
+      <method signature="System.IntPtr Read(System.IntPtr,System.UIntPtr)" required="false" />
+      <method signature="System.Void Close()" required="false" />
+      <method signature="System.Void Open()" required="false" />
+      <method signature="System.Void Schedule(Foundation.NSRunLoop,Foundation.NSString)" required="false" />
+      <method signature="System.Void Unschedule(Foundation.NSRunLoop,Foundation.NSString)" required="false" />
+    </type>
+    <type fullname="UIKit.NIDUICellAccessoryPosition" required="false" preserve="nothing">
+      <method signature="UIKit.UICellAccessoryPosition Create(System.IntPtr)" required="false" />
+    </type>
+    <type fullname="UIKit.NIDUIConfigurationColorTransformerHandler" required="false" preserve="nothing">
+      <method signature="UIKit.UIConfigurationColorTransformerHandler Create(System.IntPtr)" required="false" />
+    </type>
+    <type fullname="UIKit.UIAccessibilityCustomAction/FuncBoolDispatcher" required="false" preserve="nothing">
+      <method signature="System.Boolean Probe(UIKit.UIAccessibilityCustomAction)" required="false" />
+    </type>
+    <type fullname="UIKit.UIControlEventProxy" required="false" preserve="nothing">
+      <method signature="System.Void Activated()" required="false" />
+    </type>
+    <type fullname="UIKit.UIGestureRecognizer" required="false" preserve="nothing">
+      <method signature="System.Void OnDispose()" required="false" />
+    </type>
+    <type fullname="UIKit.UIGestureRecognizer/Callback`1" required="false" preserve="nothing">
+      <method name="Activated" required="false" />
+    </type>
+    <type fullname="UIKit.UIGestureRecognizer/ParameterlessDispatch" required="false" preserve="nothing">
+      <method signature="System.Void Activated()" required="false" />
+    </type>
+    <type fullname="UIKit.UIGestureRecognizer/ParametrizedDispatch" required="false" preserve="nothing">
+      <method signature="System.Void Activated(UIKit.UIGestureRecognizer)" required="false" />
+    </type>
+    <type fullname="UIKit.UIImageStatusDispatcher" required="false" preserve="nothing">
+      <method signature="System.Void Callback(UIKit.UIImage,Foundation.NSError,System.IntPtr)" required="false" />
+    </type>
+    <type fullname="UIKit.UISearchController/__Xamarin_UISearchResultsUpdating" required="false" preserve="nothing">
+      <method signature="System.Void UpdateSearchResultsForSearchController(UIKit.UISearchController)" required="false" />
+    </type>
+    <type fullname="UIKit.UITextField/_UITextFieldDelegate" required="false" preserve="nothing">
+      <method signature="System.Boolean ShouldBeginEditing(UIKit.UITextField)" required="false" />
+      <method signature="System.Boolean ShouldChangeCharacters(UIKit.UITextField,Foundation.NSRange,System.String)" required="false" />
+      <method signature="System.Boolean ShouldChangeCharacters(UIKit.UITextField,Foundation.NSValue[],System.String)" required="false" />
+      <method signature="System.Boolean ShouldClear(UIKit.UITextField)" required="false" />
+      <method signature="System.Boolean ShouldEndEditing(UIKit.UITextField)" required="false" />
+      <method signature="System.Boolean ShouldReturn(UIKit.UITextField)" required="false" />
+      <method signature="System.Void DidChangeSelection(UIKit.UITextField)" required="false" />
+      <method signature="System.Void EditingEnded(UIKit.UITextField)" required="false" />
+      <method signature="System.Void EditingEnded(UIKit.UITextField,UIKit.UITextFieldDidEndEditingReason)" required="false" />
+      <method signature="System.Void EditingStarted(UIKit.UITextField)" required="false" />
+    </type>
+    <type fullname="UIKit.UIVideoStatusDispatcher" required="false" preserve="nothing">
+      <method signature="System.Void Callback(System.String,Foundation.NSError,System.IntPtr)" required="false" />
+    </type>
+    <type fullname="UIKit.UIView/_UIViewStaticCallback" required="false" preserve="nothing">
+      <method signature="System.Void OnEnd()" required="false" />
+      <method signature="System.Void OnStart()" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTCompressionSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTDecompressionSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTFrameSilo" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTHdrPerFrameMetadataGenerationSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTMotionEstimationSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTMultiPassStorage" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTPixelRotationSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTPixelTransferSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+    <type fullname="VideoToolbox.VTSession" required="false" preserve="nothing">
+      <method signature="System.Void .ctor(ObjCRuntime.NativeHandle,System.Boolean)" required="false" />
+    </type>
+  </assembly>
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.Action" preserve="nothing" />
+    <type fullname="System.Action`1" preserve="nothing" />
+  </assembly>
+</linker>
