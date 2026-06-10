@@ -62,6 +62,22 @@
             </CollectionView>
         </RefreshView>
 
+        <Button Text="{Binding DistanceButtonText}" Command="{Binding CycleDistanceCommand}"
+                HeightRequest="42" CornerRadius="21" Padding="16,0" FontSize="14" FontAttributes="Bold"
+                BackgroundColor="{AppThemeBinding Light=#F2FFFFFF, Dark=#3A3A3C}"
+                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                HorizontalOptions="Start" VerticalOptions="Start" Margin="12,8,0,0">
+            <Button.Triggers>
+                <DataTrigger TargetType="Button" Binding="{Binding IsDistanceFilterActive}" Value="True">
+                    <Setter Property="BackgroundColor" Value="#4169E1" />
+                    <Setter Property="TextColor" Value="White" />
+                </DataTrigger>
+            </Button.Triggers>
+            <Button.Shadow>
+                <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.3" />
+            </Button.Shadow>
+        </Button>
+
         <ImageButton Source="{AppThemeBinding Light=menu.png, Dark=menu_dark.png}" Command="{Binding OpenFiltersCommand}"
                      WidthRequest="42" HeightRequest="42" CornerRadius="21" Padding="9"
                      BackgroundColor="{AppThemeBinding Light=#F2FFFFFF, Dark=#3A3A3C}"
