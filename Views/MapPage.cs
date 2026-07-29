@@ -177,21 +177,9 @@ public sealed class MapPage : ContentPage
         _map.Pins.Clear();
         MapMarkers.Reset();
 
-        foreach (var report in _state.FilteredReports)
-        {
-            var pin = new Pin
-            {
-                Label = report.Title,
-                Address = report.Subtitle,
-                Location = new Location(report.Coordinate.Latitude, report.Coordinate.Longitude),
-                Type = PinType.Place,
-            };
-            pin.MarkerClicked += OnReportPinClicked;
-            _reportPins[pin] = report;
-            MapMarkers.Add(report.Coordinate.Latitude, report.Coordinate.Longitude, report.Category);
-            _map.Pins.Add(pin);
-        }
-
+        // Alert centroids first so report pins are added last and therefore render
+        // on top: in a dense outbreak a warning's centroid pin can overlap a damage
+        // report, and reports are the more specific datapoint the user is tapping for.
         foreach (var alert in _state.FilteredAlerts)
         {
             if (alert.Centroid is not { } center) continue;
@@ -204,7 +192,26 @@ public sealed class MapPage : ContentPage
             };
             pin.MarkerClicked += OnAlertPinClicked;
             _alertPins[pin] = alert;
-            MapMarkers.Add(center.Latitude, center.Longitude, alert.Category);
+            // Triangle in the alert's own color (red warning / orange severe / gold
+            // watch) so a warning pin never looks like a tornado damage report.
+            MapMarkers.Add(center.Latitude, center.Longitude,
+                MarkerStyle.From(alert.Color, MapMarkers.Symbol(alert.Category), MarkerShape.Triangle));
+            _map.Pins.Add(pin);
+        }
+
+        foreach (var report in _state.FilteredReports)
+        {
+            var pin = new Pin
+            {
+                Label = report.Title,
+                Address = report.Subtitle,
+                Location = new Location(report.Coordinate.Latitude, report.Coordinate.Longitude),
+                Type = PinType.Place,
+            };
+            pin.MarkerClicked += OnReportPinClicked;
+            _reportPins[pin] = report;
+            MapMarkers.Add(report.Coordinate.Latitude, report.Coordinate.Longitude,
+                MarkerStyle.From(report.Category.Color(), MapMarkers.Symbol(report.Category), MarkerShape.Circle));
             _map.Pins.Add(pin);
         }
     }
