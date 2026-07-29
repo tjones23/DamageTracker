@@ -68,6 +68,19 @@ export interface DamageArea {
   severity: number
 }
 
+export interface RadarFrame {
+  timeUnix: number
+  /** Tile URL with {z}/{x}/{y} placeholders, ready for a Leaflet TileLayer. */
+  tileUrlTemplate: string
+}
+
+export interface RadarManifest {
+  past: RadarFrame[]
+  nowcast: RadarFrame[]
+  attribution: string
+  generatedUtc: string
+}
+
 export interface FilterSettings {
   showTornado: boolean
   showWind: boolean
@@ -80,6 +93,8 @@ export interface FilterSettings {
   reportDays: number
   outlookKind: OutlookKind | null
   outlookDay: number
+  showRadar: boolean
+  radarOpacity: number
 }
 
 export interface NotificationSettings {

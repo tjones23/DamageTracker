@@ -27,6 +27,7 @@ builder.Services.AddSingleton(NwsOptions.ForContact(
 builder.Services.AddHttpClient<NwsService>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<SpcReportService>(c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddHttpClient<SpcOutlookService>(c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient<RadarService>(c => c.Timeout = TimeSpan.FromSeconds(30));
 
 // Shared app logic from Core, with web-side implementations of the two things it
 // abstracts: key/value persistence and notifications.

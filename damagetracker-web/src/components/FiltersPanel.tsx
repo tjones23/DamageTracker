@@ -155,6 +155,24 @@ export function FiltersPanel({ onClose }: { onClose: () => void }) {
             </select>
           </div>
         )}
+
+        <h3>Radar</h3>
+        <Switch label="Composite radar" checked={f.showRadar} onChange={(v) => void updateFilters({ showRadar: v })} />
+        {f.showRadar && (
+          <div className="field">
+            <label htmlFor="ropacity">Opacity</label>
+            <input
+              id="ropacity"
+              type="range"
+              min={0.1}
+              max={1}
+              step={0.05}
+              value={f.radarOpacity}
+              onChange={(e) => void updateFilters({ radarOpacity: Number(e.target.value) })}
+            />
+            <span className="small muted">{Math.round(f.radarOpacity * 100)}%</span>
+          </div>
+        )}
       </div>
     </Modal>
   )

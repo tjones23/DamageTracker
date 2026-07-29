@@ -86,6 +86,13 @@ public static class Endpoints
             return Results.Ok(data.State.VisibleOutlookFeatures);
         });
 
+        // Animated composite-radar frames (null when the toggle is off).
+        api.MapGet("/radar", async (StormDataService data, CancellationToken ct) =>
+        {
+            await data.EnsureLoadedAsync(ct);
+            return Results.Ok(data.State.VisibleRadar);
+        });
+
         // Warnings covering a point plus nearby reports — the map's "nearby" banner.
         api.MapGet("/nearby", async (StormDataService data, double lat, double lon, CancellationToken ct) =>
         {
@@ -108,6 +115,7 @@ public static class Endpoints
             bool needsRefetch = incoming.ReportDays != state.Filters.ReportDays;
             bool outlookChanged = incoming.OutlookKind != state.Filters.OutlookKind
                                   || incoming.OutlookDay != state.Filters.OutlookDay;
+            bool radarTurnedOn = incoming.ShowRadar && !state.Filters.ShowRadar;
 
             state.UpdateFilters(f =>
             {
@@ -120,13 +128,21 @@ public static class Endpoints
                 f.MinHailInches = incoming.MinHailInches;
                 f.MinTornadoRating = incoming.MinTornadoRating;
                 f.ReportDays = Math.Clamp(incoming.ReportDays, 1, 5);
+                f.ShowRadar = incoming.ShowRadar;
+                f.RadarOpacity = Math.Clamp(incoming.RadarOpacity, 0.1, 1.0);
             });
 
             // Awaited here rather than using UpdateFilters' fire-and-forget refetch,
             // so the response reflects the newly loaded data.
             if (outlookChanged) state.SelectOutlook(incoming.OutlookKind, incoming.OutlookDay);
             if (needsRefetch) await data.RefreshAsync(ct);
-            else if (outlookChanged) await state.LoadSelectedOutlookAsync();
+            else
+            {
+                if (outlookChanged) await state.LoadSelectedOutlookAsync();
+                // A full refetch already loads radar; otherwise fetch the manifest
+                // the first time the toggle is switched on.
+                if (radarTurnedOn) await state.LoadRadarAsync();
+            }
 
             return Results.Ok(state.Filters);
         });

@@ -6,7 +6,15 @@ import { useStore } from '../store'
 import { NearbyBanner } from '../components/NearbyBanner'
 import { FiltersPanel } from '../components/FiltersPanel'
 import { AlertDetail, ReportDetail } from './Details'
-import type { Coordinate, DamageArea, OutlookFeature, StormAlert, StormReport } from '../types'
+import type {
+  Coordinate,
+  DamageArea,
+  OutlookFeature,
+  RadarFrame,
+  RadarManifest,
+  StormAlert,
+  StormReport,
+} from '../types'
 
 // Continental-US default view, matching Geo.UsBounds in Core.
 const US_BOUNDS: LatLngBoundsExpression = [
@@ -54,6 +62,9 @@ export function MapView({ active }: { active: boolean }) {
   const [damage, setDamage] = useState<DamageArea[]>([])
   const [reports, setReports] = useState<StormReport[]>([])
   const [alerts, setAlerts] = useState<StormAlert[]>([])
+  const [radar, setRadar] = useState<RadarManifest | null>(null)
+  const [frameIdx, setFrameIdx] = useState(0)
+  const [playing, setPlaying] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [recenterTo, setRecenterTo] = useState<Coordinate | null>(null)
   const [selectedReport, setSelectedReport] = useState<StormReport | null>(null)
@@ -63,17 +74,19 @@ export function MapView({ active }: { active: boolean }) {
     let cancelled = false
     void (async () => {
       try {
-        const [o, d, r, a] = await Promise.all([
+        const [o, d, r, a, rad] = await Promise.all([
           api.outlook(),
           api.damageAreas(),
           api.reports(),
           api.alerts(),
+          api.radar(),
         ])
         if (cancelled) return
         setOutlook(o)
         setDamage(d)
         setReports(r.items)
         setAlerts(a)
+        setRadar(rad)
       } catch {
         /* the store surfaces the error banner */
       }
@@ -88,6 +101,23 @@ export function MapView({ active }: { active: boolean }) {
     const seen = new Set<string>()
     return outlook.filter((f) => f.label && seen.size < 8 && !seen.has(f.label + f.detail) && seen.add(f.label + f.detail))
   }, [outlook])
+
+  // Observed frames followed by the short-range forecast, played as one loop.
+  const frames = useMemo<RadarFrame[]>(() => (radar ? [...radar.past, ...radar.nowcast] : []), [radar])
+  const radarOpacity = state?.filters.radarOpacity ?? 0.65
+
+  // Start each new manifest on the latest observed frame.
+  useEffect(() => {
+    setFrameIdx(radar ? Math.max(0, radar.past.length - 1) : 0)
+  }, [radar])
+
+  // Advance the loop while playing. Keeping every frame's TileLayer mounted (see
+  // below) means stepping only toggles opacity — no re-fetch, no flicker.
+  useEffect(() => {
+    if (!playing || frames.length < 2) return
+    const id = window.setInterval(() => setFrameIdx((i) => (i + 1) % frames.length), 500)
+    return () => window.clearInterval(id)
+  }, [playing, frames.length])
 
   const locate = async () => {
     const coord = await location.request()
@@ -105,6 +135,20 @@ export function MapView({ active }: { active: boolean }) {
         />
         <Recenter target={recenterTo} />
         <AutoFit active={active} />
+
+        {/* Animated radar. Every frame stays mounted so Leaflet keeps its tiles
+            cached; only the current frame is opaque. Raster tiles live in Leaflet's
+            tile pane, always beneath the outlook/alert/report overlays below, so
+            live warnings stay legible on top. */}
+        {frames.map((frame, i) => (
+          <TileLayer
+            key={frame.timeUnix}
+            url={frame.tileUrlTemplate}
+            opacity={i === frameIdx ? radarOpacity : 0}
+            zIndex={5}
+            noWrap
+          />
+        ))}
 
         {/* SPC outlook areas. Unlike the native map, the browser can draw the
             precomputed hatch segments directly, so CIG areas read as real hatching. */}
@@ -240,6 +284,34 @@ export function MapView({ active }: { active: boolean }) {
         </button>
       </div>
 
+      {frames.length > 0 && (
+        <div className="radar-timeline">
+          <button
+            className="radar-play"
+            onClick={() => setPlaying((p) => !p)}
+            aria-label={playing ? 'Pause radar' : 'Play radar'}
+          >
+            {playing ? '❚❚' : '▶'}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={frames.length - 1}
+            step={1}
+            value={frameIdx}
+            onChange={(e) => {
+              setPlaying(false)
+              setFrameIdx(Number(e.target.value))
+            }}
+            aria-label="Radar frame"
+          />
+          <span className="radar-time">
+            {radarFrameLabel(frames[frameIdx])}
+            <span className="radar-attr">{radar?.attribution}</span>
+          </span>
+        </div>
+      )}
+
       {legend.length > 0 && (
         <div className="legend">
           <h4>{state?.outlook?.title ?? 'SPC Outlook'}</h4>
@@ -260,6 +332,13 @@ export function MapView({ active }: { active: boolean }) {
       {selectedAlert && <AlertDetail alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}
     </div>
   )
+}
+
+/** A frame's local clock time, flagged when it's a forecast (nowcast) step. */
+function radarFrameLabel(frame: RadarFrame): string {
+  const ms = frame.timeUnix * 1000
+  const t = new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  return ms > Date.now() ? `${t} · forecast` : t
 }
 
 /** Matches StormCategoryExtensions.Color in Core. */

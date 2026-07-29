@@ -6,6 +6,7 @@ import type {
   NotificationSettings,
   OutlookFeature,
   PendingNotification,
+  RadarManifest,
   ReportsResponse,
   SavedLocation,
   SortMode,
@@ -29,7 +30,12 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
     }
     throw new Error(detail)
   }
-  return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
+  // A 204, or a 200 with an empty body (e.g. /radar when the toggle is off, which
+  // serializes a null result to no content), decodes to undefined rather than
+  // throwing on an empty JSON parse.
+  if (res.status === 204) return undefined as T
+  const text = await res.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 function query(params: Record<string, string | number | boolean | null | undefined>) {
@@ -55,6 +61,7 @@ export const api = {
 
   damageAreas: () => json<DamageArea[]>('/api/damage-areas'),
   outlook: () => json<OutlookFeature[]>('/api/outlook'),
+  radar: () => json<RadarManifest | null>('/api/radar'),
   nearby: (lat: number, lon: number) => json<NearbyResponse>(`/api/nearby${query({ lat, lon })}`),
 
   updateFilters: (filters: FilterSettings) =>
