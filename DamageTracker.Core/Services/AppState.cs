@@ -12,21 +12,24 @@ public sealed partial class AppState : ObservableObject
     private readonly SpcReportService _reports;
     private readonly SpcOutlookService _outlooks;
     private readonly INotificationService _notifications;
+    private readonly PreferencesStore _prefs;
 
     /// <summary>IDs of warnings already checked against notification settings, or
     /// null until the first refresh seeds a baseline.</summary>
     private HashSet<string>? _seenAlertIds;
 
-    public AppState(NwsService nws, SpcReportService reports, SpcOutlookService outlooks, INotificationService notifications)
+    public AppState(NwsService nws, SpcReportService reports, SpcOutlookService outlooks,
+        INotificationService notifications, PreferencesStore prefs)
     {
         _nws = nws;
         _reports = reports;
         _outlooks = outlooks;
         _notifications = notifications;
-        Filters = PreferencesStore.LoadFilters();
-        NotificationSettings = PreferencesStore.LoadNotificationSettings();
-        _seenAlertIds = PreferencesStore.LoadSeenAlertIds();
-        foreach (var loc in PreferencesStore.LoadSavedLocations())
+        _prefs = prefs;
+        Filters = _prefs.LoadFilters();
+        NotificationSettings = _prefs.LoadNotificationSettings();
+        _seenAlertIds = _prefs.LoadSeenAlertIds();
+        foreach (var loc in _prefs.LoadSavedLocations())
             SavedLocations.Add(loc);
     }
 
@@ -85,7 +88,7 @@ public sealed partial class AppState : ObservableObject
     public async Task UpdateNotificationSettingsAsync(Action<NotificationSettings> mutate)
     {
         mutate(NotificationSettings);
-        PreferencesStore.SaveNotificationSettings(NotificationSettings);
+        _prefs.SaveNotificationSettings(NotificationSettings);
         if (NotificationSettings.AnyEnabled)
             await _notifications.RequestPermissionAsync();
     }
@@ -119,7 +122,7 @@ public sealed partial class AppState : ObservableObject
         }
 
         _seenAlertIds = activeIds;
-        PreferencesStore.SaveSeenAlertIds(activeIds);
+        _prefs.SaveSeenAlertIds(activeIds);
     }
 
     // MARK: Filtering
@@ -151,8 +154,9 @@ public sealed partial class AppState : ObservableObject
         {
             var days = k.AvailableDays();
             Filters.OutlookDay = days.Contains(day) ? day : days.First();
-            _ = LoadSelectedOutlookAsync().ContinueWith(_ =>
-                MainThread.BeginInvokeOnMainThread(() => DataChanged?.Invoke()));
+            // Raised off the UI thread; every subscriber marshals for itself (the
+            // MAUI views via MainThread, the web host has no affinity to respect).
+            _ = LoadSelectedOutlookAsync().ContinueWith(_ => DataChanged?.Invoke());
         }
         PersistFilters();
     }
@@ -182,14 +186,14 @@ public sealed partial class AppState : ObservableObject
     public void ResetFilters()
     {
         Filters = new FilterSettings();
-        PreferencesStore.SaveFilters(Filters);
+        _prefs.SaveFilters(Filters);
         FiltersChanged?.Invoke();
         _ = RefreshAsync();
     }
 
     private void PersistFilters()
     {
-        PreferencesStore.SaveFilters(Filters);
+        _prefs.SaveFilters(Filters);
         FiltersChanged?.Invoke();
     }
 
@@ -215,12 +219,12 @@ public sealed partial class AppState : ObservableObject
             Latitude = coordinate.Latitude,
             Longitude = coordinate.Longitude,
         });
-        PreferencesStore.SaveSavedLocations(SavedLocations);
+        _prefs.SaveSavedLocations(SavedLocations);
     }
 
     public void RemoveSavedLocation(SavedLocation location)
     {
         SavedLocations.Remove(location);
-        PreferencesStore.SaveSavedLocations(SavedLocations);
+        _prefs.SaveSavedLocations(SavedLocations);
     }
 }

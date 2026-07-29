@@ -32,6 +32,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<SpcOutlookService>();
         builder.Services.AddSingleton<LocationService>();
         builder.Services.AddSingleton<INotificationService, NotificationService>();
+        builder.Services.AddSingleton<IPreferenceStore, MauiPreferenceStore>();
+        builder.Services.AddSingleton<PreferencesStore>();
         builder.Services.AddSingleton<AppState>();
 
         // ViewModels

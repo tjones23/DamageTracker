@@ -12,6 +12,8 @@
 		<!-- Standalone graphics package (no MAUI workload required) for the Color
 		     type used by the storm models and outlook color math. -->
 		<PackageReference Include="Microsoft.Maui.Graphics" Version="10.0.20" />
+		<!-- ObservableObject for AppState; plain .NET, no MAUI workload needed. -->
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 	</ItemGroup>
 
 </Project>
