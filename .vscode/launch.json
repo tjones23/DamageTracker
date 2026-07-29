@@ -9,7 +9,25 @@
             "type": "maui",
             "request": "launch",
             "preLaunchTask": "maui: Build"
+        },
+        {
+            // Picked from the Run and Debug dropdown; opens a browser on "/".
+            "name": "Web API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-web",
+            "program": "${workspaceFolder}/DamageTracker.Web/bin/Debug/net10.0/DamageTracker.Web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/DamageTracker.Web",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5263"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            }
         }
-
     ]
 }
