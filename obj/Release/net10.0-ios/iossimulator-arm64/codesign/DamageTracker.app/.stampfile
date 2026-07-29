@@ -1,0 +1,1 @@
+-v --force --timestamp=none --sign - --entitlements /Users/tonyjones/Documents/Dev/DamageTracker/obj/Release/net10.0-ios/iossimulator-arm64/Entitlements.xcent /Users/tonyjones/Documents/Dev/DamageTracker/bin/Release/net10.0-ios/iossimulator-arm64/DamageTracker.app

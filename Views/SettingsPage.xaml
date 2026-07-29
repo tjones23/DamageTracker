@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="DamageTracker.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Settings">
+
+    <ContentPage.Resources>
+        <Style x:Key="Header" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="Gray" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+        </Style>
+        <Style x:Key="Footer" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="Gray" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,16,16,28" Spacing="10">
+
+            <Label Text="NOTIFICATIONS" Style="{StaticResource Header}" />
+
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="2">
+                <Label Grid.Row="0" Grid.Column="0" Text="Saved location alerts" VerticalOptions="Center" />
+                <Switch Grid.Row="0" Grid.Column="1" IsToggled="{Binding SavedLocationAlerts}" />
+                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Footer}"
+                       Text="Notify me when a new warning is issued for one of my saved locations." />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="2" Margin="0,12,0,0">
+                <Label Grid.Row="0" Grid.Column="0" Text="All severe alerts" VerticalOptions="Center" />
+                <Switch Grid.Row="0" Grid.Column="1" IsToggled="{Binding AnyWarningAlerts}" />
+                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Footer}"
+                       Text="Notify me of any new tornado or severe thunderstorm warning that matches my filters." />
+            </Grid>
+
+            <Label Text="LOCATIONS" Style="{StaticResource Header}" />
+
+            <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                <Label Grid.Column="0" Text="Saved Locations" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="›" FontSize="22" TextColor="Gray" VerticalOptions="Center" />
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenSavedLocationsCommand}" />
+                </Grid.GestureRecognizers>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,1 @@
+-v --force --timestamp=none --sign - /Users/tonyjones/Documents/Dev/DamageTracker/bin/Debug/net10.0-ios/iossimulator-arm64/DamageTracker.app/libmono-component-marshal-ilgen.dylib
