@@ -70,6 +70,21 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<!-- This project lives at the repo root, so the SDK's default globs would also
+	     pick up the sibling DamageTracker.Core project's sources and compile them
+	     twice (duplicate type errors). Reference it as a project instead. -->
+	<ItemGroup>
+		<Compile Remove="DamageTracker.Core\**" />
+		<None Remove="DamageTracker.Core\**" />
+		<EmbeddedResource Remove="DamageTracker.Core\**" />
+		<MauiXaml Remove="DamageTracker.Core\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Shared, platform-neutral models and storm-data services. -->
+		<ProjectReference Include="DamageTracker.Core\DamageTracker.Core.csproj" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />

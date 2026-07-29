@@ -66,8 +66,8 @@ public sealed class CategoryFilterBar : ContentView
         foreach (var (cat, chip) in _chips)
         {
             bool on = _state.Filters.IsEnabled(cat);
-            chip.BackgroundColor = on ? cat.Color() : ColorUtil.ChipOff;
-            _labels[cat].TextColor = on ? Colors.White : ColorUtil.ChipOffText;
+            chip.BackgroundColor = on ? cat.Color() : ThemeColors.ChipOff;
+            _labels[cat].TextColor = on ? Colors.White : ThemeColors.ChipOffText;
         }
     }
 }

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DamageTracker.Core/DamageTracker.Core.csproj" />
+  <Project Path="DamageTracker.csproj" />
+</Solution>

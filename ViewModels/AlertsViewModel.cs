@@ -50,10 +50,10 @@ public sealed partial class AlertsViewModel : ObservableObject, IDisposable
     public bool ShowWarnings => _state.Filters.ShowWarnings;
     public bool ShowWatches => _state.Filters.ShowWatches;
 
-    public Color WarningsChipColor => ShowWarnings ? Color.FromArgb("#D32F2F") : ColorUtil.ChipOff;
-    public Color WatchesChipColor => ShowWatches ? Color.FromArgb("#F9A825") : ColorUtil.ChipOff;
-    public Color WarningsTextColor => ShowWarnings ? Colors.White : ColorUtil.ChipOffText;
-    public Color WatchesTextColor => ShowWatches ? Colors.White : ColorUtil.ChipOffText;
+    public Color WarningsChipColor => ShowWarnings ? Color.FromArgb("#D32F2F") : ThemeColors.ChipOff;
+    public Color WatchesChipColor => ShowWatches ? Color.FromArgb("#F9A825") : ThemeColors.ChipOff;
+    public Color WarningsTextColor => ShowWarnings ? Colors.White : ThemeColors.ChipOffText;
+    public Color WatchesTextColor => ShowWatches ? Colors.White : ThemeColors.ChipOffText;
 
     [RelayCommand] private void ToggleWarnings() => _state.UpdateFilters(f => f.ShowWarnings = !f.ShowWarnings);
     [RelayCommand] private void ToggleWatches() => _state.UpdateFilters(f => f.ShowWatches = !f.ShowWatches);

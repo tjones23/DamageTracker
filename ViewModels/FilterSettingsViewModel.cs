@@ -114,10 +114,10 @@ public sealed partial class FilterSettingsViewModel : ObservableObject
     }
 
     // Chip styling — matches the Warnings screen.
-    public Color WarningsChipColor => ShowWarnings ? Color.FromArgb("#D32F2F") : ColorUtil.ChipOff;
-    public Color WatchesChipColor => ShowWatches ? Color.FromArgb("#F9A825") : ColorUtil.ChipOff;
-    public Color WarningsTextColor => ShowWarnings ? Colors.White : ColorUtil.ChipOffText;
-    public Color WatchesTextColor => ShowWatches ? Colors.White : ColorUtil.ChipOffText;
+    public Color WarningsChipColor => ShowWarnings ? Color.FromArgb("#D32F2F") : ThemeColors.ChipOff;
+    public Color WatchesChipColor => ShowWatches ? Color.FromArgb("#F9A825") : ThemeColors.ChipOff;
+    public Color WarningsTextColor => ShowWarnings ? Colors.White : ThemeColors.ChipOffText;
+    public Color WatchesTextColor => ShowWatches ? Colors.White : ThemeColors.ChipOffText;
 
     [RelayCommand] private void ToggleWarnings() => ShowWarnings = !ShowWarnings;
     [RelayCommand] private void ToggleWatches() => ShowWatches = !ShowWatches;
