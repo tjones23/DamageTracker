@@ -31,3 +31,6 @@ DamageTracker.Web/wwwroot/
 
 # Web: runtime state written by FilePreferenceStore
 DamageTracker.Web/app-preferences.json
+
+# Node
+node_modules/
