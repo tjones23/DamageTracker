@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DamageTracker.Core/DamageTracker.Core.csproj" />
+  <Project Path="DamageTracker.csproj" />
+  <Project Path="DamageTracker.Web/DamageTracker.Web.csproj" />
+</Solution>

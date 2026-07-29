@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Platform-neutral so both the MAUI app and an ASP.NET Core host can reference it. -->
+		<TargetFramework>net10.0</TargetFramework>
+		<RootNamespace>DamageTracker</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Standalone graphics package (no MAUI workload required) for the Color
+		     type used by the storm models and outlook color math. -->
+		<PackageReference Include="Microsoft.Maui.Graphics" Version="10.0.20" />
+		<!-- ObservableObject for AppState; plain .NET, no MAUI workload needed. -->
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+	</ItemGroup>
+
+</Project>
