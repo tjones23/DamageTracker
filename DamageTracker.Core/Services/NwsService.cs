@@ -8,9 +8,16 @@ namespace DamageTracker.Services;
 public sealed class NwsService
 {
     private readonly HttpClient _http;
-    public NwsService(HttpClient http) => _http = http;
+    private readonly NwsOptions _options;
 
-    public const string UserAgent = "DamageTracker/1.0 (contact: example@example.com)";
+    public NwsService(HttpClient http, NwsOptions options)
+    {
+        _http = http;
+        _options = options;
+    }
+
+    /// <summary>The User-Agent NWS requires; see <see cref="NwsOptions"/>.</summary>
+    public string UserAgent => _options.UserAgent;
 
     private static readonly string[] RelevantEvents =
     {

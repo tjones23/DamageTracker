@@ -15,6 +15,13 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+// NWS asks for a contact in the User-Agent so they can reach whoever runs a
+// client. This host polls on behalf of every browser session, so make it
+// settable without a rebuild: set Nws:Contact (or Nws__Contact in the
+// environment) to the address responsible for this deployment.
+builder.Services.AddSingleton(NwsOptions.ForContact(
+    builder.Configuration["Nws:Contact"] ?? NwsOptions.DefaultContact));
+
 // The shared services each take an HttpClient, so they register as typed clients.
 // NwsService applies the User-Agent that NWS requires on every request itself.
 builder.Services.AddHttpClient<NwsService>(c => c.Timeout = TimeSpan.FromSeconds(30));

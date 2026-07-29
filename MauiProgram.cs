@@ -27,6 +27,7 @@ public static class MauiProgram
 
         // Networking + services
         builder.Services.AddSingleton(_ => new HttpClient { Timeout = TimeSpan.FromSeconds(30) });
+        builder.Services.AddSingleton(NwsOptions.Default);
         builder.Services.AddSingleton<NwsService>();
         builder.Services.AddSingleton<SpcReportService>();
         builder.Services.AddSingleton<SpcOutlookService>();
