@@ -168,6 +168,18 @@ public sealed partial class AppState : ObservableObject
         catch { /* leave previous */ }
     }
 
+    /// <summary>Toggles the radar overlay, fetching the manifest the first time it
+    /// is switched on. Fires FiltersChanged immediately (so the map clears when
+    /// turned off) and DataChanged once the manifest loads (so it appears).</summary>
+    public void SetShowRadar(bool on)
+    {
+        if (Filters.ShowRadar == on) return;
+        Filters.ShowRadar = on;
+        if (on)
+            _ = LoadRadarAsync().ContinueWith(_ => DataChanged?.Invoke());
+        PersistFilters();
+    }
+
     public void SelectOutlook(OutlookKind? kind, int day)
     {
         Filters.OutlookKind = kind;

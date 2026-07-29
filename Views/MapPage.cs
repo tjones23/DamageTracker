@@ -32,6 +32,8 @@ public sealed class MapPage : ContentPage
     private readonly Dictionary<Pin, StormReport> _reportPins = new();
     private readonly Dictionary<Pin, StormAlert> _alertPins = new();
 
+    private RadarMapController? _radar;
+
     private readonly VerticalStackLayout _legendStack = new() { Spacing = 4 };
     private readonly Border _legend;
     private bool _framed;
@@ -91,8 +93,13 @@ public sealed class MapPage : ContentPage
             BuildLegend();
         });
 
+        _radar = new RadarMapController(_map, Dispatcher);
+
         Loaded += (_, _) =>
         {
+            // The map handler is ready by now, so (re)apply any radar frames that a
+            // startup refresh produced before the native map existed.
+            UpdateRadar();
             if (_framed) return;
             _framed = true;
             CenterOnUser(fallbackToUs: true);
@@ -110,7 +117,11 @@ public sealed class MapPage : ContentPage
         BuildOverlays();
         BuildPins();
         BuildLegend();
+        UpdateRadar();
     }
+
+    private void UpdateRadar() =>
+        _radar?.Update(_state.VisibleRadar, _state.Filters.RadarOpacity);
 
     // MARK: Outlooks + alerts (polygons / hatch lines)
 
