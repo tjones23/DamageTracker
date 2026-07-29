@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="DamageTracker.Views.FilterSettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:DamageTracker.Controls"
+    xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+    ios:Page.UseSafeArea="True"
+    Title="">
+
+    <ContentPage.Resources>
+        <Style x:Key="Header" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="Gray" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+        </Style>
+        <Style x:Key="Footer" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="Gray" />
+        </Style>
+        <Style x:Key="FilterButton" TargetType="Button">
+            <Setter Property="FontSize" Value="19" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,16,16,28" Spacing="10">
+
+            <Label Text="SHOW STORM TYPES" Style="{StaticResource Header}" />
+            <controls:CategoryFilterBar HorizontalOptions="Start" />
+
+            <Label Text="ALERTS" Style="{StaticResource Header}" />
+            <HorizontalStackLayout Spacing="8">
+                <Border BackgroundColor="{Binding WarningsChipColor}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="16,7">
+                    <Label Text="Warnings" TextColor="{Binding WarningsTextColor}"
+                           FontAttributes="Bold" FontSize="14" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleWarningsCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border BackgroundColor="{Binding WatchesChipColor}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="16,7">
+                    <Label Text="Watches" TextColor="{Binding WatchesTextColor}"
+                           FontAttributes="Bold" FontSize="14" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleWatchesCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </HorizontalStackLayout>
+
+            <Label Text="WIND" Style="{StaticResource Header}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Min wind speed" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="{Binding WindLabel}" TextColor="Gray" VerticalOptions="Center" />
+            </Grid>
+            <Slider Minimum="60" Maximum="80" Value="{Binding MinWindMph}" />
+
+            <Label Text="HAIL" Style="{StaticResource Header}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Min hail diameter" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="{Binding HailLabel}" TextColor="Gray" VerticalOptions="Center" />
+            </Grid>
+            <Slider Minimum="0" Maximum="4" Value="{Binding MinHailInches}" />
+            <Label Style="{StaticResource Footer}" Text="Reference: penny ≈ 0.75&quot;, quarter ≈ 1.00&quot;, golf ball ≈ 1.75&quot;." />
+
+            <Label Text="TORNADO" Style="{StaticResource Header}" />
+            <Picker SelectedIndex="{Binding TornadoRatingIndex}">
+                <Picker.Items>
+                    <x:String>Any</x:String>
+                    <x:String>EF0+</x:String>
+                    <x:String>EF1+</x:String>
+                    <x:String>EF2+</x:String>
+                    <x:String>EF3+</x:String>
+                    <x:String>EF4+</x:String>
+                    <x:String>EF5+</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <Label Text="TIME RANGE" Style="{StaticResource Header}" />
+            <Picker SelectedIndex="{Binding ReportDaysIndex}">
+                <Picker.Items>
+                    <x:String>Today</x:String>
+                    <x:String>Last 2 days</x:String>
+                    <x:String>Last 3 days</x:String>
+                    <x:String>Last 5 days</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <Label Text="SPC OUTLOOK" Style="{StaticResource Header}" />
+            <Picker SelectedIndex="{Binding OutlookKindIndex}">
+                <Picker.Items>
+                    <x:String>Off</x:String>
+                    <x:String>Categorical</x:String>
+                    <x:String>Tornado</x:String>
+                    <x:String>Wind</x:String>
+                    <x:String>Hail</x:String>
+                </Picker.Items>
+            </Picker>
+            <Picker IsVisible="{Binding OutlookDaysVisible}"
+                    ItemsSource="{Binding OutlookDayItems}" SelectedIndex="{Binding OutlookDayIndex}" />
+            <Label Style="{StaticResource Footer}"
+                   Text="One SPC outlook overlay. Categorical covers days 1–3; tornado, wind, and hail cover days 1–2." />
+
+            <Button Text="Done" Command="{Binding DoneCommand}"
+                    Style="{StaticResource FilterButton}" Margin="0,24,0,0"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            <Button Text="Reset to defaults" Command="{Binding ResetCommand}"
+                    Style="{StaticResource FilterButton}" TextColor="Red" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,7 +1,13 @@
 {
-  // This is an XcodeGen project: there is no standalone .xcworkspace, only the
-  // one embedded in the generated .xcodeproj. SweetPad's auto-detection misses
-  // it and crashes with `path.join(undefined)`, so point it at the embedded
-  // workspace explicitly. (Path is stable across `xcodegen generate`.)
-  "sweetpad.build.xcodeWorkspacePath": "DamageTracker.xcodeproj/project.xcworkspace"
+  // The system dotnet (/usr/local/share/dotnet, on PATH) has the .NET 10 SDK but
+  // NOT the MAUI workload, and is root-owned so the workload can't be added there
+  // without sudo. The MAUI workload IS installed in the user-local ~/.dotnet, so
+  // point the C# Dev Kit / C# extension / .NET Install Tool at that dotnet.
+  // (Absolute paths required — no ~ expansion.)
+  "dotnetAcquisitionExtension.sharedExistingDotnetPath": "/Users/tonyjones/.dotnet/dotnet",
+  "dotnetAcquisitionExtension.existingDotnetPath": [
+    { "extensionId": "ms-dotnettools.csdevkit", "path": "/Users/tonyjones/.dotnet/dotnet" },
+    { "extensionId": "ms-dotnettools.csharp", "path": "/Users/tonyjones/.dotnet/dotnet" },
+    { "extensionId": "ms-dotnettools.vscode-dotnet-runtime", "path": "/Users/tonyjones/.dotnet/dotnet" }
+  ]
 }
