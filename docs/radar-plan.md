@@ -57,7 +57,15 @@ Radar inverts the cost — **web is cheap** (Leaflet draws raster tiles natively
 **native is the lift** (MAUI has no cross-platform tile-overlay API). The server's
 only job is to fetch and normalize the RainViewer manifest.
 
-## Phase 1 — Core + Web API + web client (this phase)
+> **Update (2026-09-25):** the web half of Phase 1 — `DamageTracker.Web` and
+> `damagetracker-web` below — has been retired. The web app now lives in its own
+> repo, [Outside](https://github.com/tjones23/Outside): a Next.js app with the
+> Core logic ported to TypeScript. It also records two RainViewer changes since
+> this plan: the free tier serves tiles only to zoom 7 (a "Zoom Level Not
+> Supported" placeholder beyond), the `nowcast` list is now empty, and tile
+> requests are rate-limited (500/min per IP), so frames are loaded one at a time.
+
+## Phase 1 — Core + Web API + web client
 
 ### Core (`DamageTracker.Core`)
 - `FilterSettings`: add `ShowRadar` (default off) and `RadarOpacity` (default 0.65).

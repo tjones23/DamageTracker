@@ -26,11 +26,5 @@ Platforms/Android/*.keystore
 publish/
 *.nupkg
 
-# Web: generated SPA bundle (produced by `npm run build` in damagetracker-web)
-DamageTracker.Web/wwwroot/
-
-# Web: runtime state written by FilePreferenceStore
-DamageTracker.Web/app-preferences.json
-
 # Node
 node_modules/
