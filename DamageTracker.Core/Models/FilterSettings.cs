@@ -25,6 +25,10 @@ public sealed class FilterSettings
     public OutlookKind? OutlookKind { get; set; }
     public int OutlookDay { get; set; } = 1;
 
+    // Animated composite-radar tile overlay. Off by default; opacity 0–1.
+    public bool ShowRadar { get; set; }
+    public double RadarOpacity { get; set; } = 0.65;
+
     public bool IsEnabled(StormCategory category) => category switch
     {
         StormCategory.Tornado => ShowTornado,

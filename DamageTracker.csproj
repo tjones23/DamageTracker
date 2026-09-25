@@ -2,7 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-ios;net10.0-android</TargetFrameworks>
-		<RuntimeIdentifiers>ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
+		<!-- iOS-only RIDs: applying them to the Android build makes it fail to
+		     resolve an Android ABI (XA0035). -->
+		<RuntimeIdentifiers Condition="$(TargetFramework.Contains('-ios'))">ios-arm64;iossimulator-arm64</RuntimeIdentifiers>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -74,10 +76,10 @@
 	     pick up the sibling DamageTracker.Core project's sources and compile them
 	     twice (duplicate type errors). Reference it as a project instead. -->
 	<ItemGroup>
-		<Compile Remove="DamageTracker.Core\**;DamageTracker.Web\**" />
-		<None Remove="DamageTracker.Core\**;DamageTracker.Web\**" />
-		<EmbeddedResource Remove="DamageTracker.Core\**;DamageTracker.Web\**" />
-		<MauiXaml Remove="DamageTracker.Core\**;DamageTracker.Web\**" />
+		<Compile Remove="DamageTracker.Core\**" />
+		<None Remove="DamageTracker.Core\**" />
+		<EmbeddedResource Remove="DamageTracker.Core\**" />
+		<MauiXaml Remove="DamageTracker.Core\**" />
 	</ItemGroup>
 
 	<ItemGroup>

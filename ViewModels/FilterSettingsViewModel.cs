@@ -43,6 +43,11 @@ public sealed partial class FilterSettingsViewModel : ObservableObject
     [ObservableProperty] private int _outlookDayIndex;
     [ObservableProperty] private bool _outlookDaysVisible;
 
+    // Radar
+    [ObservableProperty] private bool _showRadar;
+    [ObservableProperty] private double _radarOpacity;
+    [ObservableProperty] private string _radarOpacityLabel = "";
+
     public ObservableCollection<string> OutlookDayItems { get; } = new();
 
     // The min-wind slider ranges 60–80 mph (severe-wind threshold and up).
@@ -65,7 +70,10 @@ public sealed partial class FilterSettingsViewModel : ObservableObject
         ReportDaysIndex = Math.Max(0, Array.IndexOf(ReportDayValues, f.ReportDays));
         OutlookKindIndex = f.OutlookKind is { } k ? (int)k + 1 : 0;
         RebuildDayItems(f.OutlookKind, f.OutlookDay);
+        ShowRadar = f.ShowRadar;
+        RadarOpacity = f.RadarOpacity;
         UpdateMagnitudeLabels();
+        UpdateRadarLabel();
         _suppress = false;
 
         // Persist the clamp so the active filter matches what the slider shows.
@@ -94,6 +102,24 @@ public sealed partial class FilterSettingsViewModel : ObservableObject
     {
         WindLabel = MinWindMph <= 0 ? "Any" : $"{(int)MinWindMph} mph";
         HailLabel = MinHailInches <= 0 ? "Any" : $"{MinHailInches:0.00} in";
+    }
+
+    private void UpdateRadarLabel() => RadarOpacityLabel = $"{(int)Math.Round(RadarOpacity * 100)}%";
+
+    partial void OnShowRadarChanged(bool value)
+    {
+        if (_suppress) return;
+        _state.SetShowRadar(value);
+    }
+
+    partial void OnRadarOpacityChanged(double value)
+    {
+        // Snap to 5% steps; assigning the snapped value re-enters this handler once
+        // with snapped == value (idempotent), so there's no loop.
+        double snapped = Math.Round(value * 20) / 20;
+        if (Math.Abs(snapped - value) > 1e-6) { RadarOpacity = snapped; return; }
+        UpdateRadarLabel();
+        Apply(f => f.RadarOpacity = snapped);
     }
 
     partial void OnShowTornadoChanged(bool value) => Apply(f => f.ShowTornado = value);

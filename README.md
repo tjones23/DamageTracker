@@ -15,6 +15,12 @@ government data. Migrated from the original native iOS SwiftUI app.
 
 > Coverage is **United States only** — these government feeds don't cover other countries.
 
+> **Web app:** the browser version now lives in its own repo,
+> [Outside](https://github.com/tjones23/Outside) — a Next.js app with this
+> repo's Core logic ported to TypeScript, hosted on the local network and over
+> Tailscale. The earlier `DamageTracker.Web` API and `damagetracker-web` client
+> have been removed from this repo.
+
 ## Features
 
 - **Map** (Mapsui / OpenStreetMap) — live warning polygons, confirmed-report markers,

@@ -11,6 +11,7 @@ public sealed partial class AppState : ObservableObject
     private readonly NwsService _nws;
     private readonly SpcReportService _reports;
     private readonly SpcOutlookService _outlooks;
+    private readonly RadarService _radar;
     private readonly INotificationService _notifications;
     private readonly PreferencesStore _prefs;
 
@@ -19,11 +20,12 @@ public sealed partial class AppState : ObservableObject
     private HashSet<string>? _seenAlertIds;
 
     public AppState(NwsService nws, SpcReportService reports, SpcOutlookService outlooks,
-        INotificationService notifications, PreferencesStore prefs)
+        RadarService radar, INotificationService notifications, PreferencesStore prefs)
     {
         _nws = nws;
         _reports = reports;
         _outlooks = outlooks;
+        _radar = radar;
         _notifications = notifications;
         _prefs = prefs;
         Filters = _prefs.LoadFilters();
@@ -39,6 +41,7 @@ public sealed partial class AppState : ObservableObject
     public List<StormReport> Reports { get; private set; } = new();
     public ObservableCollection<SavedLocation> SavedLocations { get; } = new();
     public Dictionary<string, List<OutlookFeature>> Outlooks { get; } = new();
+    public RadarManifest? Radar { get; private set; }
 
     public FilterSettings Filters { get; private set; }
     public NotificationSettings NotificationSettings { get; private set; }
@@ -77,6 +80,7 @@ public sealed partial class AppState : ObservableObject
         IsLoading = false;
 
         await LoadSelectedOutlookAsync(force: true);
+        await LoadRadarAsync(force: true);
         CheckAlertNotifications();
         DataChanged?.Invoke();
     }
@@ -137,6 +141,9 @@ public sealed partial class AppState : ObservableObject
         Filters.SelectedOutlook is { } p && Outlooks.TryGetValue(p.Id, out var f)
             ? f : Array.Empty<OutlookFeature>();
 
+    /// <summary>The radar manifest when the toggle is on, else null.</summary>
+    public RadarManifest? VisibleRadar => Filters.ShowRadar ? Radar : null;
+
     // MARK: SPC outlooks
 
     public async Task LoadSelectedOutlookAsync(bool force = false)
@@ -145,6 +152,32 @@ public sealed partial class AppState : ObservableObject
         if (!force && Outlooks.ContainsKey(product.Id)) return;
         try { Outlooks[product.Id] = await _outlooks.FetchAsync(product); }
         catch { /* leave previous */ }
+    }
+
+    // MARK: Radar
+
+    /// <summary>Refetches the RainViewer manifest while radar is toggled on. Skips
+    /// the network call when off, and keeps the previous manifest if a fetch fails.
+    /// Pass force to refresh even when a manifest is already cached (it expires
+    /// ~every 10 minutes).</summary>
+    public async Task LoadRadarAsync(bool force = false)
+    {
+        if (!Filters.ShowRadar) return;
+        if (!force && Radar is not null) return;
+        try { Radar = await _radar.FetchAsync(); }
+        catch { /* leave previous */ }
+    }
+
+    /// <summary>Toggles the radar overlay, fetching the manifest the first time it
+    /// is switched on. Fires FiltersChanged immediately (so the map clears when
+    /// turned off) and DataChanged once the manifest loads (so it appears).</summary>
+    public void SetShowRadar(bool on)
+    {
+        if (Filters.ShowRadar == on) return;
+        Filters.ShowRadar = on;
+        if (on)
+            _ = LoadRadarAsync().ContinueWith(_ => DataChanged?.Invoke());
+        PersistFilters();
     }
 
     public void SelectOutlook(OutlookKind? kind, int day)
